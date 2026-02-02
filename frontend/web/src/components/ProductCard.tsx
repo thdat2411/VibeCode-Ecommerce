@@ -78,17 +78,15 @@ export default function ProductCard({
         {/* Product Info */}
         <div>
           {/* Brand */}
-          <p className="text-xs font-bold text-gray-600 uppercase mb-1">
-            {brand}
-          </p>
+          <p className="text-xs font-bold text-black uppercase mb-1">{brand}</p>
 
           {/* Name */}
-          <h3 className="text-sm font-bold uppercase mb-2 line-clamp-2 group-hover:underline">
+          <h3 className="text-sm font-bold uppercase mb-2 line-clamp-2 group-hover:underline text-black">
             {name}
           </h3>
 
           {/* Price */}
-          <div className="flex items-center space-x-2 mb-2">
+          <div className="flex items-center space-x-2 mb-2 text-black">
             <span className="text-base font-bold">
               ₫{price.toLocaleString("vi-VN")}
             </span>

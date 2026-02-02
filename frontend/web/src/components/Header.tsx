@@ -133,7 +133,7 @@ export default function Header() {
       {/* Left fixed navbar */}
       <div className="pointer-events-auto fixed left-0 top-0 hidden h-full w-48 flex-col justify-between px-6 py-6 md:flex">
         {/* Navigation links at top */}
-        <nav className="flex flex-col items-start space-y-3 text-xs font-semibold tracking-widest">
+        <nav className="flex flex-col items-start space-y-3 text-xs font-normal tracking-widest">
           {navLinks.map((item, index) => {
             const isLight = navLinkThemes[index] === "light";
             const linkTextColor = isLight ? "text-black" : "text-white";
