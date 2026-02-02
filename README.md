@@ -267,3 +267,4 @@ MIT
 ## 🤝 Contributing
 
 Contributions welcome! Please follow the existing code structure and adhere to the React best practices guide.
+# VibeCode-Ecommerce
