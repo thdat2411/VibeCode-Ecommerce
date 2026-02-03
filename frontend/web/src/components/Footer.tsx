@@ -8,7 +8,9 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           {/* Support Info */}
           <div>
-            <h4 className="text-sm font-bold uppercase mb-4">Support Info</h4>
+            <h4 className="text-sm font-bold uppercase mb-4 text-black">
+              Support Info
+            </h4>
             <div className="space-y-3 text-sm text-gray-600">
               <div className="flex items-start space-x-2">
                 <Phone size={16} className="mt-0.5 flex-shrink-0" />
@@ -36,7 +38,7 @@ export default function Footer() {
 
           {/* Customer Service */}
           <div>
-            <h4 className="text-sm font-bold uppercase mb-4">
+            <h4 className="text-sm font-bold text-black uppercase mb-4">
               Customer Service
             </h4>
             <ul className="space-y-2 text-sm text-gray-600">
@@ -77,7 +79,9 @@ export default function Footer() {
 
           {/* Legal */}
           <div>
-            <h4 className="text-sm font-bold uppercase mb-4">Legal</h4>
+            <h4 className="text-sm font-bold uppercase mb-4 text-black">
+              Legal
+            </h4>
             <ul className="space-y-2 text-sm text-gray-600">
               <li>
                 <Link
@@ -108,7 +112,9 @@ export default function Footer() {
 
           {/* Newsletter */}
           <div>
-            <h4 className="text-sm font-bold uppercase mb-4">Sign Up & Save</h4>
+            <h4 className="text-sm font-bold uppercase mb-4 text-black">
+              Sign Up & Save
+            </h4>
             <p className="text-sm text-gray-600 mb-4">
               Subscribe to receive special offers, free giveaways, and other
               news.

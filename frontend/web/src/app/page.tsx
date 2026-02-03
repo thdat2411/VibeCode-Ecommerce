@@ -151,17 +151,6 @@ export default function HomePage() {
             <div className="absolute inset-0 bg-black/35" />
           </div>
 
-          <div className="absolute top-8 left-6 md:left-56 z-40">
-            <Link
-              href="/"
-              className="text-2xl font-semibold tracking-wide drop-shadow"
-            >
-              the new
-              <br />
-              originals
-            </Link>
-          </div>
-
           <div className="absolute bottom-10 left-6 md:left-56 z-40 max-w-xl">
             <h2 className="text-4xl lg:text-6xl font-semibold mb-6 tracking-tight">
               BE BOLD. BE NEW. BE ORIGINAL
@@ -179,7 +168,7 @@ export default function HomePage() {
 
         {/* Trending Products Section */}
         <section className="py-16 lg:pb-10" data-nav-theme="light">
-          <div className="max-w-7xl px-4 sm:px-6 lg:px-8 md:ml-[25%]">
+          <div className="max-w-7xl px-4 sm:px-6 lg:px-8 md:ml-[25%] md:mr-[10%]">
             {/* Featured Area */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 mb-16">
               <div className="flex flex-col justify-center">
@@ -251,7 +240,7 @@ export default function HomePage() {
 
         {/* Signature Relaxed Fit Section */}
         <section data-nav-theme="light">
-          <div className="max-w-7xl px-4 sm:px-6 lg:px-8 md:ml-[25%]">
+          <div className="max-w-7xl px-4 sm:px-6 lg:px-8 md:ml-[25%]  md:mr-[10%]">
             <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-16">
               <div className="order-2 lg:order-1">
                 <p className="text-xs tracking-[0.25em] text-gray-500 uppercase mb-3">
@@ -273,7 +262,7 @@ export default function HomePage() {
                 </div>
               </div>
 
-              <div className="order-1 lg:order-2">
+              <div className="order-1">
                 <div className="relative lg:sticky lg:top-24">
                   <img
                     src="https://theneworiginals.co/cdn/shop/files/banner_d_c_ko_logo.png?v=1744450616&width=750"
@@ -288,7 +277,7 @@ export default function HomePage() {
 
         {/* Collections Section - Design Layout */}
         <section className="py-12 sm:py-16 lg:py-20" data-nav-theme="light">
-          <div className="max-w-7xl px-4 sm:px-6 lg:px-8 md:ml-[25%]">
+          <div className="max-w-7xl px-4 sm:px-6 lg:px-8 md:ml-[25%]  md:mr-[10%]">
             <div className="grid grid-cols-1 lg:grid-cols-2">
               {/* Left Column - Dark Background with Product Info */}
               <div className="bg-black text-white overflow-hidden flex flex-col justify-between items-center py-12 px-6">
@@ -328,7 +317,7 @@ export default function HomePage() {
 
         {/* Pure Comfort Section */}
         <section className="bg-gray-50" data-nav-theme="light">
-          <div className="max-w-7xl px-4 sm:px-6 lg:px-8 md:ml-[25%]">
+          <div className="max-w-7xl px-4 sm:px-6 lg:px-8 md:ml-[25%]  md:mr-[10%]">
             <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-16">
               <div className="order-2">
                 <p className="text-xs tracking-[0.25em] text-gray-500 uppercase mb-3">
@@ -351,11 +340,11 @@ export default function HomePage() {
               </div>
 
               <div className="order-1">
-                <div className="relative lg:sticky lg:top-24">
+                <div className="relative lg:sticky lg:top-24 lg:bottom-24">
                   <img
                     src="http://theneworiginals.co/cdn/shop/files/Banners_1_aa4fce64-ce96-479f-a04d-05c1bd965e99.png?v=1766111730&width=750"
                     alt="Pure comfort"
-                    className="w-[90%] h-auto rounded-sm object-cover"
+                    className="w-full h-auto rounded-sm object-cover"
                   />
                 </div>
               </div>
@@ -364,81 +353,71 @@ export default function HomePage() {
         </section>
 
         {/* Cozy Season Sweaters Section */}
-        <section className="py-16 lg:py-24" data-nav-theme="light">
-          <div className="max-w-7xl px-4 sm:px-6 lg:px-8 md:ml-[25%]">
-            <div className="mb-12">
-              <h3 className="text-3xl lg:text-4xl font-bold text-center mb-2">
-                COZY SEASON
-              </h3>
-              <p className="text-center text-gray-600">
-                Những chiếc áo len ấm áp cho ngày lạnh
-              </p>
-            </div>
+        <section data-nav-theme="light">
+          <div className="py-16 max-w-7xl px-4 sm:px-6 lg:px-8 md:ml-[25%]  md:mr-[10%]">
+            <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-16">
+              <div className="order-2 lg:order-1">
+                <p className="text-xs tracking-[0.25em] text-gray-500 uppercase mb-3">
+                  Cozy season
+                </p>
+                <h3 className="text-4xl lg:text-5xl font-semibold tracking-tight mb-6 text-black">
+                  SIGNATURE SWEATER COLLECTION
+                  <br />
+                </h3>
+                <button className="border border-black text-black px-6 py-2 text-sm tracking-widest font-semibold hover:bg-black hover:text-white transition">
+                  KHÁM PHÁ NGAY!
+                </button>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-              {sampleProducts.slice(0, 3).map((product) => (
-                <ProductCard key={product.id} {...product} />
-              ))}
+                <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  {sampleProducts.slice(0, 4).map((product) => (
+                    <ProductCard key={product.id} {...product} />
+                  ))}
+                </div>
+              </div>
+
+              <div className="order-1">
+                <div className="relative lg:sticky lg:top-24">
+                  <img
+                    src="https://theneworiginals.co/cdn/shop/files/z7342613862751_dd9c6ac7641e8001d9d3fa4cbf29925c.jpg?v=1766117832&width=750 "
+                    alt="Signature relaxed fit"
+                    className="w-full h-auto rounded-sm object-cover"
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </section>
-
         {/* Newsletter Section */}
         <section
-          className="py-16 lg:py-24 bg-black text-white"
-          data-nav-theme="dark"
+          className="pb-16 max-w-7xl px-4 sm:px-6 lg:px-8 md:ml-[25%]  md:mr-[10%]"
+          data-nav-theme="light"
         >
-          <div className="max-w-7xl px-4 sm:px-6 lg:px-8 md:ml-[25%]">
-            <div className="max-w-2xl mx-auto text-center">
-              <h3 className="text-3xl lg:text-4xl font-bold mb-4">
-                CẬP NHẬT NHỮNG SẢN PHẨM MỚI NHẤT
-              </h3>
-              <p className="text-lg text-gray-300 mb-8">
-                Đăng ký nhận thông báo về những bộ sưu tập mới, ưu đãi độc quyền
-                và sự kiện đặc biệt
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 mb-16">
+            <div className="relative h-30 sm:h-48 lg:h-full">
+              <img
+                src="https://theneworiginals.co/cdn/shop/files/z7342582002054_5558ee4dc89616f9f85fd299ef8f4131.jpg?v=1766116758&width=750"
+                alt="Featured Urban Long-Sleeves"
+                className="w-full h-full object-cover rounded-sm"
+              />
+            </div>
+            <div className="flex flex-col">
+              <p className="text-xs tracking-[0.25em] text-black uppercase mb-4">
+                Classic comfort
               </p>
-              <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
-                <input
-                  type="email"
-                  placeholder="Nhập email của bạn"
-                  className="flex-1 px-4 py-3 rounded-sm text-black placeholder-gray-400 focus:outline-none"
-                />
-                <button className="bg-white text-black px-8 py-3 rounded-sm font-semibold hover:bg-gray-200 transition tracking-wide">
-                  ĐĂNG KÝ
-                </button>
-              </div>
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight mb-6 sm:mb-8 text-black">
+                RINGER AESTHETICS
+              </h2>
+              <Link
+                href="/catalog"
+                className="inline-block w-fit bg-black text-white px-6 sm:px-8 py-2 sm:py-3 font-semibold hover:bg-gray-800 transition text-xs sm:text-sm tracking-[0.15em] uppercase"
+              >
+                Mua ngay!
+              </Link>
             </div>
           </div>
         </section>
 
         {/* Features Section */}
-        <section className="py-16 lg:py-24 bg-gray-50" data-nav-theme="light">
-          <div className="max-w-7xl px-4 sm:px-6 lg:px-8 md:ml-[25%]">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-              <div className="text-center">
-                <div className="text-5xl mb-4">🚚</div>
-                <h4 className="text-xl font-bold mb-3">GIAO HÀNG NHANH</h4>
-                <p className="text-gray-600">
-                  Giao hàng nhanh chóng và an toàn đến tận tay bạn
-                </p>
-              </div>
-              <div className="text-center">
-                <div className="text-5xl mb-4">✓</div>
-                <h4 className="text-xl font-bold mb-3">CHẤT LƯỢNG CAO</h4>
-                <p className="text-gray-600">
-                  Nguyên liệu cao cấp và kỹ thuật chế tác tuyệt vời
-                </p>
-              </div>
-              <div className="text-center">
-                <div className="text-5xl mb-4">💬</div>
-                <h4 className="text-xl font-bold mb-3">HỖNG TRỢ KHÁCH HÀNG</h4>
-                <p className="text-gray-600">
-                  Luôn sẵn sàng giúp đỡ bạn với bất kỳ câu hỏi nào
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
       </main>
     </div>
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Menu,
@@ -14,11 +15,8 @@ import {
 } from "lucide-react";
 
 export default function Header() {
+  const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [navThemeTop, setNavThemeTop] = useState<"dark" | "light">("dark");
-  const [navThemeBottom, setNavThemeBottom] = useState<"dark" | "light">(
-    "dark",
-  );
   const [navThemeRight, setNavThemeRight] = useState<"dark" | "light">("dark");
   const navLinkRefs = useRef<(HTMLAnchorElement | null)[]>([]);
   const socialLinkRefs = useRef<(HTMLAnchorElement | null)[]>([]);
@@ -48,12 +46,67 @@ export default function Header() {
     [],
   );
 
-  const [navLinkThemes, setNavLinkThemes] = useState<("dark" | "light")[]>(() =>
-    navLinks.map(() => "dark"),
-  );
+  const [navLinkThemes, setNavLinkThemes] = useState<("dark" | "light")[]>([]);
   const [socialLinkThemes, setSocialLinkThemes] = useState<
     ("dark" | "light")[]
-  >(() => socialLinks.map(() => "dark"));
+  >([]);
+
+  useEffect(() => {
+    // Initialize themes on mount
+    setNavLinkThemes(navLinks.map(() => "dark"));
+    setSocialLinkThemes(socialLinks.map(() => "dark"));
+  }, []);
+
+  useEffect(() => {
+    // Handle route changes - reset scroll to top and trigger theme update
+    window.scrollTo(0, 0);
+    // Trigger theme update after a short delay to allow DOM to settle
+    setTimeout(() => {
+      triggerThemeUpdate();
+    }, 100);
+  }, [pathname]);
+
+  const triggerThemeUpdate = () => {
+    const resolveThemeAtPoint = (x: number, y: number) => {
+      if (typeof document === "undefined") return undefined;
+      const stack = document.elementsFromPoint(x, y);
+      const section = stack
+        .map((element) => (element as HTMLElement).closest("[data-nav-theme]"))
+        .find(Boolean) as HTMLElement | undefined;
+      const theme = section?.getAttribute("data-nav-theme");
+      return theme === "light" || theme === "dark" ? theme : undefined;
+    };
+
+    const sampleCenter = (element: HTMLElement | null) => {
+      if (!element) return undefined;
+      const rect = element.getBoundingClientRect();
+      const x = Math.min(
+        Math.max(rect.left + rect.width / 2, 0),
+        window.innerWidth - 1,
+      );
+      const y = Math.min(
+        Math.max(rect.top + rect.height / 2, 0),
+        window.innerHeight - 1,
+      );
+      return resolveThemeAtPoint(x, y);
+    };
+
+    setNavLinkThemes((prevThemes) =>
+      navLinkRefs.current.map(
+        (node, index) => sampleCenter(node) ?? prevThemes[index] ?? "dark",
+      ),
+    );
+    setSocialLinkThemes((prevThemes) =>
+      socialLinkRefs.current.map(
+        (node, index) => sampleCenter(node) ?? prevThemes[index] ?? "dark",
+      ),
+    );
+
+    const rightTheme = sampleCenter(rightIconsRef.current);
+    if (rightTheme) {
+      setNavThemeRight(rightTheme);
+    }
+  };
 
   useEffect(() => {
     const resolveThemeAtPoint = (x: number, y: number) => {
@@ -81,55 +134,56 @@ export default function Header() {
     };
 
     const updateThemes = () => {
-      const nextNavThemes = navLinkRefs.current.map(
-        (node, index) => sampleCenter(node) ?? navLinkThemes[index] ?? "dark",
+      setNavLinkThemes((prevThemes) =>
+        navLinkRefs.current.map(
+          (node, index) => sampleCenter(node) ?? prevThemes[index] ?? "dark",
+        ),
       );
-      const nextSocialThemes = socialLinkRefs.current.map(
-        (node, index) =>
-          sampleCenter(node) ?? socialLinkThemes[index] ?? "dark",
+      setSocialLinkThemes((prevThemes) =>
+        socialLinkRefs.current.map(
+          (node, index) => sampleCenter(node) ?? prevThemes[index] ?? "dark",
+        ),
       );
-      const rightTheme = sampleCenter(rightIconsRef.current);
 
-      setNavLinkThemes(nextNavThemes);
-      setSocialLinkThemes(nextSocialThemes);
-      setNavThemeTop(nextNavThemes[0] ?? "dark");
-      setNavThemeBottom(nextSocialThemes[0] ?? "dark");
-      setNavThemeRight((prev) => rightTheme ?? prev);
+      const rightTheme = sampleCenter(rightIconsRef.current);
+      if (rightTheme) {
+        setNavThemeRight(rightTheme);
+      }
     };
 
-    updateThemes();
+    triggerThemeUpdate();
     window.addEventListener("scroll", updateThemes, { passive: true });
     window.addEventListener("resize", updateThemes);
     return () => {
       window.removeEventListener("scroll", updateThemes);
       window.removeEventListener("resize", updateThemes);
     };
-  }, [navLinkThemes, socialLinkThemes]);
+  }, []);
 
-  const isLightTop = navThemeTop === "light";
-  const isLightBottom = navThemeBottom === "light";
   const isLightRight = navThemeRight === "light";
 
-  const textColorTop = isLightTop ? "text-black" : "text-white";
-  const textColorBottom = isLightBottom ? "text-black" : "text-white";
   const textColorRight = isLightRight ? "text-black" : "text-white";
-  const hoverColorTop = isLightTop
-    ? "hover:text-gray-700"
-    : "hover:text-gray-300";
-  const hoverColorBottom = isLightBottom
-    ? "hover:text-gray-700"
-    : "hover:text-gray-300";
+
   const hoverColorRight = isLightRight
     ? "hover:text-gray-700"
     : "hover:text-gray-300";
   const badgeStyles = isLightRight
     ? "bg-black text-white"
     : "bg-white text-black";
-  const iconBadgeBg = isLightBottom ? "bg-black" : "bg-white";
-  const iconBadgeFg = isLightBottom ? "text-white" : "text-black";
-
   return (
     <header className="fixed inset-0 z-50 pointer-events-none">
+      {/* Brand area - top left */}
+      <div className="pointer-events-auto fixed left-6 md:left-56 top-8 z-50">
+        <Link
+          href="/"
+          className={`text-2xl font-semibold tracking-wide drop-shadow ${navThemeRight === "light" ? "text-black" : "text-white"}`}
+        >
+          the new
+          <br />
+          originals
+        </Link>
+      </div>
+
       {/* Left fixed navbar */}
       <div className="pointer-events-auto fixed left-0 top-0 hidden h-full w-48 flex-col justify-between px-6 py-6 md:flex">
         {/* Navigation links at top */}
