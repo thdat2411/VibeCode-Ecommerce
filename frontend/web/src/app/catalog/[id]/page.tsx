@@ -1,6 +1,6 @@
 "use client";
 
-import { getProductById } from "@/lib/api";
+import { getProductById } from "@/lib/api/catalog";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";

@@ -1,6 +1,6 @@
 "use client";
 
-import { Product } from "@/lib/api";
+import { Product } from "@/lib/api/catalog";
 import Image from "next/image";
 import Link from "next/link";
 

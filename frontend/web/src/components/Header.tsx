@@ -13,10 +13,10 @@ import {
   User,
   ShoppingCart,
 } from "lucide-react";
-
 export default function Header() {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const [navThemeRight, setNavThemeRight] = useState<"dark" | "light">("dark");
   const navLinkRefs = useRef<(HTMLAnchorElement | null)[]>([]);
   const socialLinkRefs = useRef<(HTMLAnchorElement | null)[]>([]);
@@ -52,10 +52,15 @@ export default function Header() {
   >([]);
 
   useEffect(() => {
-    // Initialize themes on mount
+    // Initialize mounted flag and themes on mount
+    setMounted(true);
     setNavLinkThemes(navLinks.map(() => "dark"));
     setSocialLinkThemes(socialLinks.map(() => "dark"));
-  }, []);
+    // Trigger theme update immediately after mount
+    setTimeout(() => {
+      triggerThemeUpdate();
+    }, 0);
+  }, [navLinks, socialLinks]);
 
   useEffect(() => {
     // Handle route changes - reset scroll to top and trigger theme update
@@ -84,10 +89,8 @@ export default function Header() {
         Math.max(rect.left + rect.width / 2, 0),
         window.innerWidth - 1,
       );
-      const y = Math.min(
-        Math.max(rect.top + rect.height / 2, 0),
-        window.innerHeight - 1,
-      );
+      // Sample further down the page (at 20% of viewport height) to find actual content theme
+      const y = Math.max(window.innerHeight * 0.2, 0);
       return resolveThemeAtPoint(x, y);
     };
 
@@ -126,10 +129,8 @@ export default function Header() {
         Math.max(rect.left + rect.width / 2, 0),
         window.innerWidth - 1,
       );
-      const y = Math.min(
-        Math.max(rect.top + rect.height / 2, 0),
-        window.innerHeight - 1,
-      );
+      // Sample further down the page (at 20% of viewport height) to find actual content theme
+      const y = Math.max(window.innerHeight * 0.2, 0);
       return resolveThemeAtPoint(x, y);
     };
 
@@ -170,10 +171,17 @@ export default function Header() {
   const badgeStyles = isLightRight
     ? "bg-black text-white"
     : "bg-white text-black";
+
   return (
-    <header className="fixed inset-0 z-50 pointer-events-none">
+    <header
+      className="fixed inset-0 z-50 pointer-events-none"
+      suppressHydrationWarning
+    >
       {/* Brand area - top left */}
-      <div className="pointer-events-auto fixed left-6 md:left-56 top-8 z-50">
+      <div
+        className="pointer-events-auto fixed left-6 md:left-56 top-8 z-50"
+        suppressHydrationWarning
+      >
         <Link
           href="/"
           className={`text-2xl font-semibold tracking-wide drop-shadow ${navThemeRight === "light" ? "text-black" : "text-white"}`}
@@ -185,7 +193,10 @@ export default function Header() {
       </div>
 
       {/* Left fixed navbar */}
-      <div className="pointer-events-auto fixed left-0 top-0 hidden h-full w-48 flex-col justify-between px-6 py-6 md:flex">
+      <div
+        className="pointer-events-auto fixed left-0 top-0 hidden h-full w-48 flex-col justify-between px-6 py-6 md:flex"
+        suppressHydrationWarning
+      >
         {/* Navigation links at top */}
         <nav className="flex flex-col items-start space-y-3 text-xs font-normal tracking-widest">
           {navLinks.map((item, index) => {
@@ -240,11 +251,12 @@ export default function Header() {
       <div
         ref={rightIconsRef}
         className={`pointer-events-auto fixed right-8 top-8 hidden items-center space-x-6 md:flex ${textColorRight} z-50`}
+        suppressHydrationWarning
       >
         <button className={`${hoverColorRight} transition`}>
           <Search size={20} />
         </button>
-        <Link href="/auth/signin" className={`${hoverColorRight} transition`}>
+        <Link href="/dashboard" className={`${hoverColorRight} transition`}>
           <User size={20} />
         </Link>
         <Link href="/cart" className={`relative ${hoverColorRight} transition`}>

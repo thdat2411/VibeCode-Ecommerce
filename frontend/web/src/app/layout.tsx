@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { Suspense } from "react";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import Loading from "./loading";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -21,7 +23,7 @@ export default function RootLayout({
       <body className={inter.className}>
         <Header />
         <div className="min-h-screen">
-          {children}
+          <Suspense fallback={<Loading />}>{children}</Suspense>
           <Footer />
         </div>
       </body>

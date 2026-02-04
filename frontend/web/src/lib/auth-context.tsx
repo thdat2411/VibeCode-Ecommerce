@@ -7,7 +7,7 @@ import {
   useEffect,
   ReactNode,
 } from "react";
-import { isAuthenticated, clearAuth } from "@/lib/api";
+import { isAuthenticated, clearAuth } from "@/lib/api/auth";
 
 interface AuthContextType {
   authenticated: boolean;

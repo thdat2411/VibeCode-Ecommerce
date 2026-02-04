@@ -81,6 +81,13 @@ app.MapGet("/api/users/me", async (HttpContext context, IMongoDatabase db) =>
 
 app.MapPost("/api/auth/register", async ([FromBody] RegisterRequest request, IMongoDatabase db) =>
 {
+    var collection = db.GetCollection<User>("users");
+
+    // Check if email already exists
+    var existingUser = await collection.Find(u => u.Email == request.Email).FirstOrDefaultAsync();
+    if (existingUser is not null)
+        return Results.BadRequest(new { message = "Email already registered" });
+
     var user = new User
     {
         Email = request.Email,
@@ -89,7 +96,6 @@ app.MapPost("/api/auth/register", async ([FromBody] RegisterRequest request, IMo
         CreatedAt = DateTime.UtcNow
     };
 
-    var collection = db.GetCollection<User>("users");
     await collection.InsertOneAsync(user);
 
     var token = GenerateJwtToken(user, builder.Configuration);
@@ -177,6 +183,159 @@ app.MapPut("/api/users/me", async ([FromBody] UpdateUserRequest request, HttpCon
 .WithName("UpdateUser")
 .WithOpenApi();
 
+// Address Management Endpoints
+
+// GET all addresses for current user
+app.MapGet("/api/addresses", async (HttpContext context, IMongoDatabase db) =>
+{
+    var userId = context.Request.Headers["X-User-Id"].FirstOrDefault();
+    if (string.IsNullOrEmpty(userId))
+        return Results.Unauthorized();
+
+    var collection = db.GetCollection<User>("users");
+    var user = await collection.Find(u => u.Id == userId).FirstOrDefaultAsync();
+    return user?.Addresses is not null ? Results.Ok(user.Addresses) : Results.Ok(new List<AddressData>());
+})
+.WithName("GetAddresses")
+.WithOpenApi();
+
+// POST - Add new address
+app.MapPost("/api/addresses", async ([FromBody] AddressData request, HttpContext context, IMongoDatabase db) =>
+{
+    var userId = context.Request.Headers["X-User-Id"].FirstOrDefault();
+    if (string.IsNullOrEmpty(userId))
+        return Results.Unauthorized();
+
+    var collection = db.GetCollection<User>("users");
+    var user = await collection.Find(u => u.Id == userId).FirstOrDefaultAsync();
+    if (user is null)
+        return Results.NotFound();
+
+    var newAddress = new AddressData
+    {
+        Id = Guid.NewGuid().ToString(),
+        FirstName = request.FirstName,
+        LastName = request.LastName,
+        Company = request.Company,
+        Street = request.Street,
+        Ward = request.Ward,
+        District = request.District,
+        City = request.City,
+        Country = request.Country,
+        PostalCode = request.PostalCode,
+        Phone = request.Phone,
+        IsDefault = request.IsDefault || (user.Addresses?.Count == 0)
+    };
+
+    // If this is set as default, unset others
+    if (newAddress.IsDefault && user.Addresses != null)
+    {
+        user.Addresses.ForEach(a => a.IsDefault = false);
+    }
+
+    var update = Builders<User>.Update.Push(u => u.Addresses, newAddress);
+    await collection.UpdateOneAsync(u => u.Id == userId, update);
+
+    return Results.Ok(newAddress);
+})
+.WithName("AddAddress")
+.WithOpenApi();
+
+// PUT - Update address
+app.MapPut("/api/addresses/{id}", async (string id, [FromBody] AddressData request, HttpContext context, IMongoDatabase db) =>
+{
+    var userId = context.Request.Headers["X-User-Id"].FirstOrDefault();
+    if (string.IsNullOrEmpty(userId))
+        return Results.Unauthorized();
+
+    var collection = db.GetCollection<User>("users");
+    var user = await collection.Find(u => u.Id == userId).FirstOrDefaultAsync();
+    if (user is null || user.Addresses == null)
+        return Results.NotFound();
+
+    var addressIndex = user.Addresses.FindIndex(a => a.Id == id);
+    if (addressIndex < 0)
+        return Results.NotFound();
+
+    user.Addresses[addressIndex] = new AddressData
+    {
+        Id = id,
+        FirstName = request.FirstName,
+        LastName = request.LastName,
+        Company = request.Company,
+        Street = request.Street,
+        Ward = request.Ward,
+        District = request.District,
+        City = request.City,
+        Country = request.Country,
+        PostalCode = request.PostalCode,
+        Phone = request.Phone,
+        IsDefault = request.IsDefault
+    };
+
+    // If this is set as default, unset others
+    if (request.IsDefault)
+    {
+        foreach (var address in user.Addresses.Where((a, i) => i != addressIndex))
+        {
+            address.IsDefault = false;
+        }
+    }
+
+    var update = Builders<User>.Update.Set(u => u.Addresses, user.Addresses);
+    await collection.UpdateOneAsync(u => u.Id == userId, update);
+
+    return Results.Ok(user.Addresses[addressIndex]);
+})
+.WithName("UpdateAddress")
+.WithOpenApi();
+
+// DELETE - Delete address
+app.MapDelete("/api/addresses/{id}", async (string id, HttpContext context, IMongoDatabase db) =>
+{
+    var userId = context.Request.Headers["X-User-Id"].FirstOrDefault();
+    if (string.IsNullOrEmpty(userId))
+        return Results.Unauthorized();
+
+    var collection = db.GetCollection<User>("users");
+    var update = Builders<User>.Update.PullFilter(u => u.Addresses, a => a.Id == id);
+    await collection.UpdateOneAsync(u => u.Id == userId, update);
+
+    return Results.Ok();
+})
+.WithName("DeleteAddress")
+.WithOpenApi();
+
+// PUT - Set address as default
+app.MapPut("/api/addresses/{id}/default", async (string id, HttpContext context, IMongoDatabase db) =>
+{
+    var userId = context.Request.Headers["X-User-Id"].FirstOrDefault();
+    if (string.IsNullOrEmpty(userId))
+        return Results.Unauthorized();
+
+    var collection = db.GetCollection<User>("users");
+    var user = await collection.Find(u => u.Id == userId).FirstOrDefaultAsync();
+    if (user is null || user.Addresses == null)
+        return Results.NotFound();
+
+    // Unset all as default
+    user.Addresses.ForEach(a => a.IsDefault = false);
+
+    // Set the specified one as default
+    var addressToSet = user.Addresses.FirstOrDefault(a => a.Id == id);
+    if (addressToSet == null)
+        return Results.NotFound();
+
+    addressToSet.IsDefault = true;
+
+    var update = Builders<User>.Update.Set(u => u.Addresses, user.Addresses);
+    await collection.UpdateOneAsync(u => u.Id == userId, update);
+
+    return Results.Ok(addressToSet);
+})
+.WithName("SetDefaultAddress")
+.WithOpenApi();
+
 app.Run();
 
 static string GenerateJwtToken(User user, IConfiguration configuration)
@@ -212,6 +371,7 @@ public record User
     public string? Phone { get; set; }
     public string? GoogleId { get; set; }
     public Address? ShippingAddress { get; set; }
+    public List<AddressData> Addresses { get; set; } = new();
     public DateTime CreatedAt { get; init; }
 }
 
@@ -222,6 +382,22 @@ public record Address
     public string State { get; init; } = string.Empty;
     public string ZipCode { get; init; } = string.Empty;
     public string Country { get; init; } = string.Empty;
+}
+
+public class AddressData
+{
+    public string Id { get; set; } = Guid.NewGuid().ToString();
+    public string FirstName { get; set; } = string.Empty;
+    public string LastName { get; set; } = string.Empty;
+    public string? Company { get; set; }
+    public string Street { get; set; } = string.Empty;
+    public string? Ward { get; set; }
+    public string District { get; set; } = string.Empty;
+    public string City { get; set; } = string.Empty;
+    public string Country { get; set; } = string.Empty;
+    public string PostalCode { get; set; } = string.Empty;
+    public string Phone { get; set; } = string.Empty;
+    public bool IsDefault { get; set; }
 }
 
 public record RegisterRequest
@@ -246,5 +422,4 @@ public record UpdateUserRequest
 public record GoogleSignInRequest
 {
     public string IdToken { get; init; } = string.Empty;
-}   public Address? ShippingAddress { get; init; }
 }

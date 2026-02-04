@@ -3,6 +3,9 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { getCart } from "@/lib/api/cart";
+import { createOrder } from "@/lib/api/orders";
+import { processCheckout } from "@/lib/api/payments";
 
 interface CartItem {
   productId: string;
@@ -32,18 +35,9 @@ export default function CheckoutPage() {
 
   async function fetchCart() {
     try {
-      const userId = localStorage.getItem("userId") || "temp-user-id";
-      const res = await fetch("http://localhost:5000/api/cart", {
-        headers: {
-          "X-User-Id": userId,
-        },
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        setCart(data.items);
-        setTotal(data.total);
-      }
+      const data = await getCart();
+      setCart(data.items);
+      setTotal(data.total);
     } catch (error) {
       console.error("Failed to fetch cart:", error);
     } finally {
@@ -56,59 +50,38 @@ export default function CheckoutPage() {
     setProcessing(true);
 
     try {
-      const userId = localStorage.getItem("userId") || "temp-user-id";
-
       // Create order first
-      const orderRes = await fetch("http://localhost:5000/api/orders", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-User-Id": userId,
-        },
-        body: JSON.stringify({
-          userId,
-          items: cart.map((item) => ({
-            productId: item.productId,
-            name: item.name,
-            price: item.price,
-            quantity: item.quantity,
-          })),
-          total,
-          status: "pending",
-          shippingAddress,
-        }),
-      });
+      const orderData = {
+        items: cart.map((item) => ({
+          productId: item.productId,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+        })),
+        total,
+        status: "pending",
+        shippingAddress,
+      };
 
-      if (!orderRes.ok) {
-        throw new Error("Failed to create order");
-      }
-
-      const order = await orderRes.json();
+      const order = await createOrder(orderData);
 
       // Create Stripe checkout session
-      const checkoutRes = await fetch(
-        "http://localhost:5000/api/payments/checkout",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            orderId: order.id,
-            amount: Math.round(total * 100), // Convert to cents
-            currency: "usd",
-          }),
-        },
-      );
+      const checkoutData = {
+        items: cart.map((item) => ({
+          productId: item.productId,
+          quantity: item.quantity,
+          price: item.price,
+        })),
+        shippingAddress,
+      };
 
-      if (!checkoutRes.ok) {
-        throw new Error("Failed to create checkout session");
-      }
-
-      const { sessionUrl } = await checkoutRes.json();
+      const paymentResponse = await processCheckout(checkoutData);
 
       // Redirect to Stripe checkout
-      window.location.href = sessionUrl;
+      if (paymentResponse.clientSecret) {
+        // Handle redirect or payment processing
+        alert("Payment processing - redirecting to checkout");
+      }
     } catch (error) {
       console.error("Checkout failed:", error);
       alert("Failed to process checkout. Please try again.");

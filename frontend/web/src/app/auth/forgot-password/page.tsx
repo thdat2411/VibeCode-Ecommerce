@@ -69,7 +69,7 @@ export default function ForgotPasswordPage() {
       <div className="max-w-7xl w-full px-4 sm:px-6 lg:px-8 md:ml-[25%] md:mr-[10%]">
         <div className="max-w-md mx-auto">
           <div className="text-center mb-8">
-            <h2 className="text-2xl mb-2">ĐẶT LẠI MẬT KHẨU</h2>
+            <h2 className="text-2xl mb-2 text-black">ĐẶT LẠI MẬT KHẨU</h2>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -107,7 +107,7 @@ export default function ForgotPasswordPage() {
               disabled={loading}
               className="w-full bg-black text-white py-4 text-sm tracking-wide hover:bg-gray-900 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
-              {loading ? "ĐANG GỪI..." : "GỪI LIÊN KỚT"}
+              {loading ? "ĐANG GỪI..." : "GỪI LIÊN KẾT"}
             </button>
 
             <div className="text-center">

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { googleSignIn, setAuthToken } from "@/lib/api";
+import { googleSignIn, setAuthToken } from "@/lib/api/auth";
 
 declare global {
   interface Window {

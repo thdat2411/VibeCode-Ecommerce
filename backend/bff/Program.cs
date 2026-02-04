@@ -39,15 +39,6 @@ builder.Services.AddHttpClient("PaymentsService", client =>
 
 var app = builder.Build();
 
-// Helper method to read request body
-async static Task<string> ReadBodyAsync(this HttpRequest request)
-{
-    request.EnableBuffering();
-    var body = await new StreamReader(request.Body).ReadToEndAsync();
-    request.Body.Position = 0;
-    return body;
-}
-
 // Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
@@ -134,8 +125,8 @@ app.MapPost("/api/payments/checkout", async (IHttpClientFactory clientFactory) =
 app.MapPost("/api/auth/login", async (HttpRequest request, IHttpClientFactory clientFactory) =>
 {
     var client = clientFactory.CreateClient("UsersService");
-    var body = await request.ReadBodyAsync();
-    var content = new StringContent(body, System.Text.Encoding.UTF8, "application/json");
+    var body = await ReadBodyAsync(request);
+    var content = new StringContent(body, System.Text.Encoding.UTF8, new System.Net.Http.Headers.MediaTypeHeaderValue("application/json"));
     var response = await client.PostAsync("/api/auth/login", content);
     return Results.Ok(await response.Content.ReadAsStringAsync());
 })
@@ -145,8 +136,8 @@ app.MapPost("/api/auth/login", async (HttpRequest request, IHttpClientFactory cl
 app.MapPost("/api/auth/register", async (HttpRequest request, IHttpClientFactory clientFactory) =>
 {
     var client = clientFactory.CreateClient("UsersService");
-    var body = await request.ReadBodyAsync();
-    var content = new StringContent(body, System.Text.Encoding.UTF8, "application/json");
+    var body = await ReadBodyAsync(request);
+    var content = new StringContent(body, System.Text.Encoding.UTF8, new System.Net.Http.Headers.MediaTypeHeaderValue("application/json"));
     var response = await client.PostAsync("/api/auth/register", content);
     return Results.Ok(await response.Content.ReadAsStringAsync());
 })
@@ -156,12 +147,108 @@ app.MapPost("/api/auth/register", async (HttpRequest request, IHttpClientFactory
 app.MapPost("/api/auth/google", async (HttpRequest request, IHttpClientFactory clientFactory) =>
 {
     var client = clientFactory.CreateClient("UsersService");
-    var body = await request.ReadBodyAsync();
-    var content = new StringContent(body, System.Text.Encoding.UTF8, "application/json");
+    var body = await ReadBodyAsync(request);
+    var content = new StringContent(body, System.Text.Encoding.UTF8, new System.Net.Http.Headers.MediaTypeHeaderValue("application/json"));
     var response = await client.PostAsync("/api/auth/google", content);
     return Results.Ok(await response.Content.ReadAsStringAsync());
 })
 .WithName("GoogleSignIn")
 .WithOpenApi();
 
+// Address Management Endpoints
+
+app.MapGet("/api/addresses", async (HttpContext context, IHttpClientFactory clientFactory) =>
+{
+    var userId = context.Request.Headers["X-User-Id"].FirstOrDefault();
+    if (string.IsNullOrEmpty(userId))
+        return Results.Unauthorized();
+
+    var client = clientFactory.CreateClient("UsersService");
+    var request = new HttpRequestMessage(HttpMethod.Get, "/api/addresses");
+    request.Headers.Add("X-User-Id", userId);
+
+    var response = await client.SendAsync(request);
+    return Results.Ok(await response.Content.ReadAsStringAsync());
+})
+.WithName("GetAddresses")
+.WithOpenApi();
+
+app.MapPost("/api/addresses", async (HttpRequest request, HttpContext context, IHttpClientFactory clientFactory) =>
+{
+    var userId = context.Request.Headers["X-User-Id"].FirstOrDefault();
+    if (string.IsNullOrEmpty(userId))
+        return Results.Unauthorized();
+
+    var client = clientFactory.CreateClient("UsersService");
+    var body = await ReadBodyAsync(request);
+    var content = new StringContent(body, System.Text.Encoding.UTF8, new System.Net.Http.Headers.MediaTypeHeaderValue("application/json"));
+
+    var httpRequest = new HttpRequestMessage(HttpMethod.Post, "/api/addresses") { Content = content };
+    httpRequest.Headers.Add("X-User-Id", userId);
+
+    var response = await client.SendAsync(httpRequest);
+    return Results.Ok(await response.Content.ReadAsStringAsync());
+})
+.WithName("AddAddress")
+.WithOpenApi();
+
+app.MapPut("/api/addresses/{id}", async (string id, HttpRequest request, HttpContext context, IHttpClientFactory clientFactory) =>
+{
+    var userId = context.Request.Headers["X-User-Id"].FirstOrDefault();
+    if (string.IsNullOrEmpty(userId))
+        return Results.Unauthorized();
+
+    var client = clientFactory.CreateClient("UsersService");
+    var body = await ReadBodyAsync(request);
+    var content = new StringContent(body, System.Text.Encoding.UTF8, new System.Net.Http.Headers.MediaTypeHeaderValue("application/json"));
+
+    var httpRequest = new HttpRequestMessage(HttpMethod.Put, $"/api/addresses/{id}") { Content = content };
+    httpRequest.Headers.Add("X-User-Id", userId);
+
+    var response = await client.SendAsync(httpRequest);
+    return Results.Ok(await response.Content.ReadAsStringAsync());
+})
+.WithName("UpdateAddress")
+.WithOpenApi();
+
+app.MapDelete("/api/addresses/{id}", async (string id, HttpContext context, IHttpClientFactory clientFactory) =>
+{
+    var userId = context.Request.Headers["X-User-Id"].FirstOrDefault();
+    if (string.IsNullOrEmpty(userId))
+        return Results.Unauthorized();
+
+    var client = clientFactory.CreateClient("UsersService");
+    var httpRequest = new HttpRequestMessage(HttpMethod.Delete, $"/api/addresses/{id}");
+    httpRequest.Headers.Add("X-User-Id", userId);
+
+    var response = await client.SendAsync(httpRequest);
+    return Results.Ok(await response.Content.ReadAsStringAsync());
+})
+.WithName("DeleteAddress")
+.WithOpenApi();
+
+app.MapPut("/api/addresses/{id}/default", async (string id, HttpContext context, IHttpClientFactory clientFactory) =>
+{
+    var userId = context.Request.Headers["X-User-Id"].FirstOrDefault();
+    if (string.IsNullOrEmpty(userId))
+        return Results.Unauthorized();
+
+    var client = clientFactory.CreateClient("UsersService");
+    var httpRequest = new HttpRequestMessage(HttpMethod.Put, $"/api/addresses/{id}/default");
+    httpRequest.Headers.Add("X-User-Id", userId);
+
+    var response = await client.SendAsync(httpRequest);
+    return Results.Ok(await response.Content.ReadAsStringAsync());
+})
+.WithName("SetDefaultAddress")
+.WithOpenApi();
+
 app.Run();
+
+static async Task<string> ReadBodyAsync(HttpRequest request)
+{
+    request.EnableBuffering();
+    var body = await new StreamReader(request.Body).ReadToEndAsync();
+    request.Body.Position = 0;
+    return body;
+}

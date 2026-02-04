@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { addToCart, isAuthenticated } from "@/lib/api";
+import { addToCart } from "@/lib/api/cart";
+import { isAuthenticated } from "@/lib/api/auth";
 
 export interface Product {
   id: string;

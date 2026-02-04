@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Product } from "@/lib/api";
+import { Product } from "@/lib/api/catalog";
 import { CatalogFilters } from "./CatalogFilters";
 import { CatalogResults } from "./CatalogResults";
 

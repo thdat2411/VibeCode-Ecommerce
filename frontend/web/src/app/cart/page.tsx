@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { getCart, removeFromCart, getUserId } from "@/lib/api";
+import { getCart, removeFromCart } from "@/lib/api/cart";
+import { getUserId } from "@/lib/api/auth";
 
 interface CartItem {
   productId: string;
