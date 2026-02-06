@@ -104,9 +104,9 @@ export default function DashboardPage() {
       const userId = localStorage.getItem("userId");
       setUser({
         id: userId || "user-1",
-        name: "Nguyễn Văn A",
-        email: localStorage.getItem("userEmail") || "user@example.com",
-        phone: "0123456789",
+        name: "User",
+        email: "user@example.com",
+        phone: "",
       });
     }
   }

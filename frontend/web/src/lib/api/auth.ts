@@ -1,38 +1,34 @@
-import axios, { AxiosError } from 'axios';
+import { AxiosError } from 'axios';
+import { apiClient, handleApiError } from './client';
 
-const BFF_URL = process.env.NEXT_PUBLIC_BFF_URL || 'http://localhost:5000';
+export interface User {
+    id: string;
+    email: string;
+    name: string;
+    phone?: string;
+    shippingAddress?: {
+        street: string;
+        city: string;
+        state: string;
+        zipCode: string;
+        country: string;
+    };
+}
 
-const apiClient = axios.create({
-    baseURL: BFF_URL,
-    timeout: 10000,
-    headers: {
-        'Content-Type': 'application/json',
-    }
-});
+export interface AuthResponse {
+    token: string;
+    userId: string;
+}
 
 // Auth API
-export async function login(email: string, password: string): Promise<{ token: string; userId: string }> {
+export async function login(email: string, password: string): Promise<AuthResponse> {
     try {
         const response = await apiClient.post('/api/auth/login', { email, password });
-        let data = response.data;
-        
-        // Handle case where response.data is a JSON string instead of object
-        if (typeof data === 'string') {
-            data = JSON.parse(data);
-        }
-        
-        // Backend returns { token, user: { id, ... } } or { token, userId }
-        const userId = data.user?.id || data.userId || data.UserId || data.User?.Id || data.User?.id;
-
-        return {
-            token: data.token || data.Token,
-            userId: userId
-        };
+        console.log('Login API response:', response.data);
+        return response.data;
     } catch (error) {
-        if (error instanceof AxiosError) {
-            throw new Error(error.response?.data?.message || 'Login failed');
-        }
-        throw error;
+        console.error('Login API error:', error);
+        throw new Error(handleApiError(error));
     }
 }
 
@@ -41,49 +37,21 @@ export async function register(data: {
     password: string;
     name: string;
     phone?: string;
-}): Promise<{ token: string; userId: string }> {
+}): Promise<AuthResponse> {
     try {
         const response = await apiClient.post('/api/auth/register', data);
-        let responseData = response.data;
-        
-        // Handle case where response.data is a JSON string instead of object
-        if (typeof responseData === 'string') {
-            responseData = JSON.parse(responseData);
-        }
-
-        // Backend returns { token, user: { id, ... } } or { token, userId }
-        return {
-            token: responseData.token || responseData.Token,
-            userId: responseData.user?.id || responseData.userId || responseData.UserId || responseData.user?.Id || responseData.User?.Id
-        };
+        return response.data;
     } catch (error) {
-        if (error instanceof AxiosError) {
-            throw new Error(error.response?.data?.message || 'Registration failed');
-        }
-        throw error;
+        throw new Error(handleApiError(error));
     }
 }
 
-export async function googleSignIn(idToken: string): Promise<{ token: string; userId: string }> {
+export async function googleSignIn(idToken: string): Promise<AuthResponse> {
     try {
         const response = await apiClient.post('/api/auth/google', { idToken });
-        let data = response.data;
-        
-        // Handle case where response.data is a JSON string instead of object
-        if (typeof data === 'string') {
-            data = JSON.parse(data);
-        }
-
-        // Backend returns { token, user: { id, ... } } or { token, userId }
-        return {
-            token: data.token || data.Token,
-            userId: data.user?.id || data.userId || data.UserId || data.User?.Id || data.User?.id
-        };
+        return response.data;
     } catch (error) {
-        if (error instanceof AxiosError) {
-            throw new Error(error.response?.data?.message || 'Google sign in failed');
-        }
-        throw error;
+        throw new Error(handleApiError(error));
     }
 }
 

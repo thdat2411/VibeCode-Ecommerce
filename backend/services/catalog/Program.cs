@@ -1,8 +1,13 @@
-using Microsoft.AspNetCore.Mvc;
+using Catalog.Endpoints;
+using Catalog.Models;
+using Catalog.Repositories;
+using Catalog.Services;
 using MongoDB.Driver;
+using Shared.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Add services
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -20,6 +25,10 @@ builder.Services.AddScoped(sp =>
     return client.GetDatabase(databaseName);
 });
 
+// Register repository and service
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
+builder.Services.AddScoped<ProductService>();
+
 var app = builder.Build();
 
 // Seed data on startup
@@ -35,55 +44,10 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-// Catalog API endpoints
-app.MapGet("/api/products", async (IMongoDatabase db) =>
-{
-    var collection = db.GetCollection<Product>("products");
-    var products = await collection.Find(_ => true).ToListAsync();
-    return Results.Ok(products);
-})
-.WithName("GetAllProducts")
-.WithOpenApi();
+// Use global exception handler
+app.UseGlobalExceptionHandler();
 
-app.MapGet("/api/products/{id}", async (string id, IMongoDatabase db) =>
-{
-    var collection = db.GetCollection<Product>("products");
-    var product = await collection.Find(p => p.Id == id).FirstOrDefaultAsync();
-    return product is not null ? Results.Ok(product) : Results.NotFound();
-})
-.WithName("GetProductById")
-.WithOpenApi();
-
-app.MapGet("/api/products/category/{category}", async (string category, IMongoDatabase db) =>
-{
-    var collection = db.GetCollection<Product>("products");
-    var products = await collection.Find(p => p.Category == category).ToListAsync();
-    return Results.Ok(products);
-})
-.WithName("GetProductsByCategory")
-.WithOpenApi();
-
-app.MapPost("/api/products", async ([FromBody] Product product, IMongoDatabase db) =>
-{
-    var collection = db.GetCollection<Product>("products");
-    await collection.InsertOneAsync(product);
-    return Results.Created($"/api/products/{product.Id}", product);
-})
-.WithName("CreateProduct")
-.WithOpenApi();
+// Map endpoints
+app.MapCatalogEndpoints();
 
 app.Run();
-
-// Models
-public record Product
-{
-    public string Id { get; init; } = Guid.NewGuid().ToString();
-    public string Name { get; init; } = string.Empty;
-    public string Description { get; init; } = string.Empty;
-    public decimal Price { get; init; }
-    public string Category { get; init; } = string.Empty;
-    public string[] Images { get; init; } = Array.Empty<string>();
-    public Dictionary<string, string[]> Variants { get; init; } = new();
-    public int Stock { get; init; }
-    public DateTime CreatedAt { get; init; } = DateTime.UtcNow;
-}

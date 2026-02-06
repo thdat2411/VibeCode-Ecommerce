@@ -128,7 +128,8 @@ app.MapPost("/api/auth/login", async (HttpRequest request, IHttpClientFactory cl
     var body = await ReadBodyAsync(request);
     var content = new StringContent(body, System.Text.Encoding.UTF8, new System.Net.Http.Headers.MediaTypeHeaderValue("application/json"));
     var response = await client.PostAsync("/api/auth/login", content);
-    return Results.Ok(await response.Content.ReadAsStringAsync());
+    var jsonResponse = await response.Content.ReadFromJsonAsync<object>();
+    return Results.Ok(jsonResponse);
 })
 .WithName("Login")
 .WithOpenApi();
@@ -139,7 +140,8 @@ app.MapPost("/api/auth/register", async (HttpRequest request, IHttpClientFactory
     var body = await ReadBodyAsync(request);
     var content = new StringContent(body, System.Text.Encoding.UTF8, new System.Net.Http.Headers.MediaTypeHeaderValue("application/json"));
     var response = await client.PostAsync("/api/auth/register", content);
-    return Results.Ok(await response.Content.ReadAsStringAsync());
+    var jsonResponse = await response.Content.ReadFromJsonAsync<object>();
+    return Results.Ok(jsonResponse);
 })
 .WithName("Register")
 .WithOpenApi();
@@ -150,7 +152,8 @@ app.MapPost("/api/auth/google", async (HttpRequest request, IHttpClientFactory c
     var body = await ReadBodyAsync(request);
     var content = new StringContent(body, System.Text.Encoding.UTF8, new System.Net.Http.Headers.MediaTypeHeaderValue("application/json"));
     var response = await client.PostAsync("/api/auth/google", content);
-    return Results.Ok(await response.Content.ReadAsStringAsync());
+    var jsonResponse = await response.Content.ReadFromJsonAsync<object>();
+    return Results.Ok(jsonResponse);
 })
 .WithName("GoogleSignIn")
 .WithOpenApi();

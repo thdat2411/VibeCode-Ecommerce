@@ -21,9 +21,16 @@ export default function SignInPage() {
 
     try {
       const result = await login(email, password);
+      console.log("Login successful:", result);
+
+      if (!result || !result.token || !result.userId) {
+        throw new Error("Invalid response from server");
+      }
+
       setAuthToken(result.token, result.userId);
       router.push("/dashboard");
     } catch (err) {
+      console.error("Login error:", err);
       setError(err instanceof Error ? err.message : "Invalid credentials");
     } finally {
       setLoading(false);

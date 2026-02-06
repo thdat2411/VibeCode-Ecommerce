@@ -25,21 +25,26 @@ export default function SignUpPage() {
 
     try {
       console.log("Register attempt with email:", formData.email);
-      const { token, userId } = await register(formData);
+      const result = await register(formData);
 
-      console.log("Register response received:", {
-        token: token?.substring(0, 20) + "...",
-        userId,
-        isTokenDefined: token !== undefined,
-        isUserIdDefined: userId !== undefined,
+      console.log("Register response received:", result);
+
+      if (!result || !result.token || !result.userId) {
+        throw new Error("Invalid response from server");
+      }
+
+      console.log("Register response validated:", {
+        token: result.token?.substring(0, 20) + "...",
+        userId: result.userId,
       });
 
       // Store auth data
-      setAuthToken(token, userId);
+      setAuthToken(result.token, result.userId);
 
       // Redirect to dashboard
       router.push("/dashboard");
     } catch (err) {
+      console.error("Registration error:", err);
       setError(err instanceof Error ? err.message : "Registration failed");
     } finally {
       setLoading(false);
