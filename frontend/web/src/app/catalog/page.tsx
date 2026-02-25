@@ -2,6 +2,9 @@ import { getProducts } from "@/lib/api/catalog";
 import Link from "next/link";
 import { CatalogWrapper } from "@/components/CatalogWrapper";
 
+// Disable static generation since we're fetching from API
+export const dynamic = "force-dynamic";
+
 export default async function CatalogPage() {
   const products = await getProducts();
 

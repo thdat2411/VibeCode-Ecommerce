@@ -1,3 +1,40 @@
+@keyframes scale-110 {
+  to {
+    transform: scale(1.1);
+  }
+}
+
+@keyframes scale-110-reverse {
+  from {
+    transform: scale(1.1);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+@keyframes spin-180 {
+  to {
+    transform: rotate(180deg);
+  }
+}
+
+@keyframes spin-180-reverse {
+  from {
+    transform: rotate(180deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+.animate-scale-110 {
+  animation: scale-110 0.3s ease-out forwards;
+}
+
+.animate-scale-110-reverse {
+  animation: scale-110-reverse 0.3s ease-out forwards;
+}
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

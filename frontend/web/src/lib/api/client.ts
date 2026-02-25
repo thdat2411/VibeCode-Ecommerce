@@ -13,7 +13,7 @@ const BFF_URL = process.env.NEXT_PUBLIC_BFF_URL || "http://localhost:5000";
 export function createApiClient(): AxiosInstance {
     const client = axios.create({
         baseURL: BFF_URL,
-        timeout: 10000,
+        timeout: 5000,
         headers: {
             "Content-Type": "application/json",
         },

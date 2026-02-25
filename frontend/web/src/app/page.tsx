@@ -151,11 +151,11 @@ export default function HomePage() {
             <div className="absolute inset-0 bg-black/35" />
           </div>
 
-          <div className="absolute bottom-10 left-6 md:left-56 z-40 max-w-xl">
-            <h2 className="text-4xl lg:text-6xl font-semibold mb-6 tracking-tight">
+          <div className="absolute bottom-10 left-6 lg:left-[16.5%] z-40 max-w-xl">
+            <h2 className="text-2xl md:text-4xl lg:text-6xl font-semibold mb-6 tracking-tight">
               BE BOLD. BE NEW. BE ORIGINAL
             </h2>
-            <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex sm:flex-row gap-3">
               <Link
                 href="/catalog"
                 className="inline-block bg-white text-black px-10 py-3 rounded-sm font-semibold hover:bg-gray-200 transition text-sm tracking-widest"
@@ -168,9 +168,9 @@ export default function HomePage() {
 
         {/* Trending Products Section */}
         <section className="py-16 lg:pb-10" data-nav-theme="light">
-          <div className="max-w-7xl px-4 sm:px-6 lg:px-8 md:ml-[25%] md:mr-[10%]">
+          <div className="max-w-7xl px-4 sm:px-6 lg:px-8 lg:ml-[25%]  lg:mr-[10%]">
             {/* Featured Area */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 mb-16">
+            <div className="grid grid-cols-1 lg:grid-cols-2 md:grid-cols-2 md:gap-12 gap-8 lg:gap-12 mb-16">
               <div className="flex flex-col justify-center">
                 <p className="text-xs tracking-[0.25em] text-black uppercase mb-4">
                   Brand new product
@@ -240,9 +240,9 @@ export default function HomePage() {
 
         {/* Signature Relaxed Fit Section */}
         <section data-nav-theme="light">
-          <div className="max-w-7xl px-4 sm:px-6 lg:px-8 md:ml-[25%]  md:mr-[10%]">
-            <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-16">
-              <div className="order-2 lg:order-1">
+          <div className="max-w-7xl px-4 sm:px-6 lg:px-8 lg:ml-[25%] lg:mr-[10%]">
+            <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-16 md:grid-cols-2 md:gap-16">
+              <div className="order-2 lg:order-1 md:order-1">
                 <p className="text-xs tracking-[0.25em] text-gray-500 uppercase mb-3">
                   Define your style
                 </p>
@@ -263,7 +263,7 @@ export default function HomePage() {
               </div>
 
               <div className="order-1">
-                <div className="relative lg:sticky lg:top-24">
+                <div className="relative lg:sticky lg:top-24 md:sticky md:top-24">
                   <img
                     src="https://theneworiginals.co/cdn/shop/files/banner_d_c_ko_logo.png?v=1744450616&width=750"
                     alt="Signature relaxed fit"
@@ -277,8 +277,8 @@ export default function HomePage() {
 
         {/* Collections Section - Design Layout */}
         <section className="py-12 sm:py-16 lg:py-20" data-nav-theme="light">
-          <div className="max-w-7xl px-4 sm:px-6 lg:px-8 md:ml-[25%]  md:mr-[10%]">
-            <div className="grid grid-cols-1 lg:grid-cols-2">
+          <div className="max-w-7xl px-4 sm:px-6 lg:px-8 lg:ml-[25%]  lg:mr-[10%]">
+            <div className="grid grid-cols-1 lg:grid-cols-2 md:grid-cols-2">
               {/* Left Column - Dark Background with Product Info */}
               <div className="bg-black text-white overflow-hidden flex flex-col justify-between items-center py-12 px-6">
                 {/* Product Image Container */}
@@ -317,8 +317,8 @@ export default function HomePage() {
 
         {/* Pure Comfort Section */}
         <section className="bg-gray-50" data-nav-theme="light">
-          <div className="max-w-7xl px-4 sm:px-6 lg:px-8 md:ml-[25%]  md:mr-[10%]">
-            <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-16">
+          <div className="max-w-7xl px-4 sm:px-6 lg:px-8 lg:ml-[25%]  lg:mr-[10%]">
+            <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-16 md:grid-cols-2 md:gap-16">
               <div className="order-2">
                 <p className="text-xs tracking-[0.25em] text-gray-500 uppercase mb-3">
                   Pure comfort
@@ -340,7 +340,7 @@ export default function HomePage() {
               </div>
 
               <div className="order-1">
-                <div className="relative lg:sticky lg:top-24 lg:bottom-24">
+                <div className="relative lg:sticky lg:top-24 lg:bottom-24 md:top-24 md:bottom-24 md:sticky">
                   <img
                     src="http://theneworiginals.co/cdn/shop/files/Banners_1_aa4fce64-ce96-479f-a04d-05c1bd965e99.png?v=1766111730&width=750"
                     alt="Pure comfort"
@@ -354,9 +354,9 @@ export default function HomePage() {
 
         {/* Cozy Season Sweaters Section */}
         <section data-nav-theme="light">
-          <div className="py-16 max-w-7xl px-4 sm:px-6 lg:px-8 md:ml-[25%]  md:mr-[10%]">
-            <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-16">
-              <div className="order-2 lg:order-1">
+          <div className="py-16 max-w-7xl px-4 sm:px-6 lg:px-8 lg:ml-[25%]  lg:mr-[10%]">
+            <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-16 md:grid-cols-2 md:gap-16">
+              <div className="order-2 lg:order-1 md:order-1">
                 <p className="text-xs tracking-[0.25em] text-gray-500 uppercase mb-3">
                   Cozy season
                 </p>
@@ -376,7 +376,7 @@ export default function HomePage() {
               </div>
 
               <div className="order-1">
-                <div className="relative lg:sticky lg:top-24">
+                <div className="relative lg:sticky lg:top-24 md:top-24 md:sticky">
                   <img
                     src="https://theneworiginals.co/cdn/shop/files/z7342613862751_dd9c6ac7641e8001d9d3fa4cbf29925c.jpg?v=1766117832&width=750 "
                     alt="Signature relaxed fit"
@@ -389,7 +389,7 @@ export default function HomePage() {
         </section>
         {/* Newsletter Section */}
         <section
-          className="pb-16 max-w-7xl px-4 sm:px-6 lg:px-8 md:ml-[25%]  md:mr-[10%]"
+          className="pb-16 max-w-7xl px-4 sm:px-6 lg:px-8 lg:ml-[25%]  lg:mr-[10%]"
           data-nav-theme="light"
         >
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 mb-16">

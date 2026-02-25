@@ -6,12 +6,13 @@ namespace Catalog.Services;
 
 /// <summary>
 /// Business logic service for product operations
+/// Uses generic repository for data access (database-agnostic)
 /// </summary>
 public class ProductService
 {
-    private readonly IProductRepository _repository;
+    private readonly IRepository<Product> _repository;
 
-    public ProductService(IProductRepository repository)
+    public ProductService(IRepository<Product> repository)
     {
         _repository = repository;
     }
@@ -30,12 +31,12 @@ public class ProductService
         return product;
     }
 
-    public async Task<IEnumerable<Product>> GetProductsByCategoryAsync(string category)
+    public async Task<IEnumerable<Product>> GetProductsByCollectionIdAsync(string collectionId)
     {
-        if (string.IsNullOrWhiteSpace(category))
-            throw new ValidationException("Category cannot be empty.");
+        if (string.IsNullOrWhiteSpace(collectionId))
+            throw new ValidationException("CollectionId cannot be empty.");
 
-        return await _repository.GetByCategoryAsync(category);
+        return await _repository.FindAsync(p => p.CollectionId == collectionId);
     }
 
     public async Task<Product> CreateProductAsync(Product product)
@@ -53,7 +54,7 @@ public class ProductService
             throw new NotFoundException("Product", id);
 
         var updatedProduct = product with { Id = id };
-        await _repository.UpdateAsync(id, updatedProduct);
+        await _repository.UpdateAsync(updatedProduct);
         return updatedProduct;
     }
 
@@ -76,8 +77,8 @@ public class ProductService
         if (product.Price <= 0)
             errors["Price"] = new[] { "Product price must be greater than zero." };
 
-        if (string.IsNullOrWhiteSpace(product.Category))
-            errors["Category"] = new[] { "Product category is required." };
+        if (string.IsNullOrWhiteSpace(product.CollectionId))
+            errors["CollectionId"] = new[] { "Product collection is required." };
 
         if (errors.Count > 0)
             throw new ValidationException(errors);

@@ -73,14 +73,14 @@ export function AddToCartForm({ product, sizes, colors }: AddToCartFormProps) {
       {/* Size Selection */}
       {sizes.length > 0 && (
         <div>
-          <label className="block text-sm font-semibold mb-3">Size</label>
-          <div className="flex gap-2 flex-wrap">
+          <label className="block text-xs mb-3">Size</label>
+          <div className="grid grid-cols-2 gap-2">
             {sizes.map((size) => (
               <button
                 key={size}
                 type="button"
                 onClick={() => setSelectedSize(size)}
-                className={`px-4 py-2 rounded transition ${
+                className={`px-4 py-2 rounded transition text-xs ${
                   selectedSize === size
                     ? "bg-black text-white border border-black"
                     : "border border-gray-300 hover:border-black"
@@ -93,46 +93,25 @@ export function AddToCartForm({ product, sizes, colors }: AddToCartFormProps) {
         </div>
       )}
 
-      {/* Color Selection */}
-      {colors.length > 0 && (
-        <div>
-          <label className="block text-sm font-semibold mb-3">Color</label>
-          <div className="flex gap-2 flex-wrap">
-            {colors.map((color) => (
-              <button
-                key={color}
-                type="button"
-                onClick={() => setSelectedColor(color)}
-                className={`px-4 py-2 rounded transition ${
-                  selectedColor === color
-                    ? "bg-black text-white border border-black"
-                    : "border border-gray-300 hover:border-black"
-                }`}
-              >
-                {color}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* Quantity Selector */}
       <div>
-        <label className="block text-sm font-semibold mb-3">Quantity</label>
+        <label className="block text-xs mb-3">SỐ LƯỢNG</label>
         <div className="flex items-center border border-gray-300 rounded w-fit">
           <button
             type="button"
             onClick={() => setQuantity(Math.max(1, quantity - 1))}
-            className="px-4 py-3 hover:bg-gray-100 transition"
+            className="px-2 py-1 hover:bg-gray-100 transition text-base"
             disabled={quantity <= 1}
           >
             −
           </button>
-          <span className="px-6 py-3 border-x border-gray-300">{quantity}</span>
+          <span className="px-4 py-1 border-x border-gray-300 text-sm">
+            {quantity}
+          </span>
           <button
             type="button"
             onClick={() => setQuantity(quantity + 1)}
-            className="px-4 py-3 hover:bg-gray-100 transition"
+            className="px-2 py-1 hover:bg-gray-100 transition text-base"
             disabled={quantity >= product.stock}
           >
             +
@@ -162,7 +141,7 @@ export function AddToCartForm({ product, sizes, colors }: AddToCartFormProps) {
       </button>
 
       {/* Stock Info */}
-      <p className="text-sm text-gray-500">
+      <p className="text-xs text-gray-500">
         {product.stock > 0 ? `${product.stock} in stock` : "Out of stock"}
       </p>
     </form>

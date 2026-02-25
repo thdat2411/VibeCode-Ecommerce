@@ -68,8 +68,20 @@ export default function AddressModal({
     if (!addressForm.street?.trim()) {
       missingFields.push("Địa chỉ 1");
     }
+    if (!addressForm.ward?.trim()) {
+      missingFields.push("Phường (Xã)");
+    }
+    if (!addressForm.district?.trim()) {
+      missingFields.push("Quận (Huyện)");
+    }
     if (!addressForm.city?.trim()) {
       missingFields.push("Tỉnh (Thành)");
+    }
+    if (!addressForm.country || addressForm.country === "---") {
+      missingFields.push("Quốc gia/Lãnh thổ");
+    }
+    if (!addressForm.postalCode?.trim()) {
+      missingFields.push("Mã bưu chính");
     }
     if (!addressForm.phone?.trim()) {
       missingFields.push("Điện thoại");
@@ -97,6 +109,12 @@ export default function AddressModal({
     }
   };
 
+  const getErrorClass = (fieldName: string) => {
+    return errors.includes(fieldName)
+      ? "border-red-500 focus:border-red-500"
+      : "border-gray-300 focus:border-black";
+  };
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto rounded-lg">
@@ -113,18 +131,6 @@ export default function AddressModal({
         </div>
 
         {/* Error Display */}
-        {errors.length > 0 && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded">
-            <p className="text-sm text-red-600 font-medium mb-2">
-              Vui lòng điền các trường sau:
-            </p>
-            <ul className="text-sm text-red-600 space-y-1">
-              {errors.map((error, index) => (
-                <li key={index}>• {error}</li>
-              ))}
-            </ul>
-          </div>
-        )}
 
         <div className="space-y-4 mb-8">
           {/* First Name and Last Name */}
@@ -143,13 +149,17 @@ export default function AddressModal({
                     firstName: e.target.value,
                   });
                 }}
-                className="w-full border border-gray-300 px-4 py-3 text-sm !text-black placeholder-gray-500 focus:outline-none focus:border-black"
+                className={`w-full border px-4 py-3 text-sm !text-black placeholder-gray-500 focus:outline-none ${
+                  errors.includes("Họ")
+                    ? "border-red-500 focus:border-red-500"
+                    : "border-gray-300 focus:border-black"
+                }`}
                 placeholder="Họ"
               />
             </div>
             <div>
               <label className="block text-xs text-gray-600 tracking-wider mb-2 uppercase">
-                TÊN
+                TÊN *
               </label>
               <input
                 type="text"
@@ -161,7 +171,11 @@ export default function AddressModal({
                     lastName: e.target.value,
                   });
                 }}
-                className="w-full border border-gray-300 px-4 py-3 text-sm !text-black placeholder-gray-500 focus:outline-none focus:border-black"
+                className={`w-full border px-4 py-3 text-sm !text-black placeholder-gray-500 focus:outline-none ${
+                  errors.includes("Tên")
+                    ? "border-red-500 focus:border-red-500"
+                    : "border-gray-300 focus:border-black"
+                }`}
                 placeholder="Tên"
               />
             </div>
@@ -190,7 +204,7 @@ export default function AddressModal({
           {/* Address */}
           <div>
             <label className="block text-xs text-gray-600 tracking-wider mb-2 uppercase">
-              ĐỊA CHỈ 1
+              ĐỊA CHỈ 1 *
             </label>
             <input
               type="text"
@@ -202,7 +216,9 @@ export default function AddressModal({
                   street: e.target.value,
                 });
               }}
-              className="w-full border border-gray-300 px-4 py-3 text-sm !text-black placeholder-gray-500 focus:outline-none focus:border-black"
+              className={`w-full border px-4 py-3 text-sm !text-black placeholder-gray-500 focus:outline-none ${getErrorClass(
+                "Địa chỉ 1",
+              )}`}
               placeholder="Số nhà, đường phố"
             />
           </div>
@@ -210,7 +226,7 @@ export default function AddressModal({
           {/* Ward */}
           <div>
             <label className="block text-xs text-gray-600 tracking-wider mb-2 uppercase">
-              PHƯỜNG (XÃ)
+              PHƯỜNG (XÃ) *
             </label>
             <input
               type="text"
@@ -222,15 +238,35 @@ export default function AddressModal({
                   ward: e.target.value,
                 });
               }}
-              className="w-full border border-gray-300 px-4 py-3 text-sm !text-black placeholder-gray-500 focus:outline-none focus:border-black"
+              className={`w-full border px-4 py-3 text-sm !text-black placeholder-gray-500 focus:outline-none ${getErrorClass(
+                "Phường (Xã)",
+              )}`}
               placeholder="Phường / Xã"
             />
           </div>
 
-          {/* City/Province */}
+          {/* District */}
           <div>
             <label className="block text-xs text-gray-600 tracking-wider mb-2 uppercase">
-              TỈNH (THÀNH)
+              QUẬN (HUYỆN) *
+            </label>
+            <input
+              type="text"
+              value={addressForm.district}
+              onChange={(e) => {
+                clearErrors();
+                setAddressForm({
+                  ...addressForm,
+                  district: e.target.value,
+                });
+              }}
+              className={`w-full border px-4 py-3 text-sm !text-black placeholder-gray-500 focus:outline-none ${getErrorClass(
+                "Quận (Huyện)",
+              )}`}
+              placeholder="Quận / Huyện"
+            />
+            <label className="block text-xs text-gray-600 tracking-wider mb-2 uppercase">
+              TỈNH (THÀNH) *
             </label>
             <input
               type="text"
@@ -242,7 +278,9 @@ export default function AddressModal({
                   city: e.target.value,
                 });
               }}
-              className="w-full border border-gray-300 px-4 py-3 text-sm !text-black placeholder-gray-500 focus:outline-none focus:border-black"
+              className={`w-full border px-4 py-3 text-sm !text-black placeholder-gray-500 focus:outline-none ${getErrorClass(
+                "Tỉnh (Thành)",
+              )}`}
               placeholder="Thành phố / Tỉnh"
             />
           </div>
@@ -261,7 +299,9 @@ export default function AddressModal({
                   country: e.target.value,
                 });
               }}
-              className="w-full border border-gray-300 px-4 py-3 text-sm !text-black focus:outline-none focus:border-black bg-white"
+              className={`w-full border px-4 py-3 text-sm !text-black focus:outline-none bg-white ${getErrorClass(
+                "Quốc gia/Lãnh thổ",
+              )}`}
             >
               <option value="---">---</option>
               <option value="VIỆT NAM">VIỆT NAM</option>
@@ -277,7 +317,7 @@ export default function AddressModal({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs text-gray-600 tracking-wider mb-2 uppercase">
-                MÃ BƯU CHÍNH
+                MÃ BƯU CHÍNH *
               </label>
               <input
                 type="text"
@@ -289,25 +329,30 @@ export default function AddressModal({
                     postalCode: e.target.value,
                   });
                 }}
-                className="w-full border border-gray-300 px-4 py-3 text-sm !text-black placeholder-gray-500 focus:outline-none focus:border-black"
+                className={`w-full border px-4 py-3 text-sm !text-black placeholder-gray-500 focus:outline-none ${getErrorClass(
+                  "Mã bưu chính",
+                )}`}
                 placeholder="Mã bưu chính"
               />
             </div>
             <div>
               <label className="block text-xs text-gray-600 tracking-wider mb-2 uppercase">
-                ĐIỆN THOẠI
+                ĐIỆN THOẠI *
               </label>
               <input
                 type="text"
                 value={addressForm.phone}
                 onChange={(e) => {
+                  const phoneValue = e.target.value.replace(/[^0-9]/g, "");
                   clearErrors();
                   setAddressForm({
                     ...addressForm,
-                    phone: e.target.value,
+                    phone: phoneValue,
                   });
                 }}
-                className="w-full border border-gray-300 px-4 py-3 text-sm !text-black placeholder-gray-500 focus:outline-none focus:border-black"
+                className={`w-full border px-4 py-3 text-sm !text-black placeholder-gray-500 focus:outline-none ${getErrorClass(
+                  "Điện thoại",
+                )}`}
                 placeholder="Số điện thoại"
               />
             </div>

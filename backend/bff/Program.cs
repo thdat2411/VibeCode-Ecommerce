@@ -15,26 +15,31 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Add HttpClient for downstream services
+// Add HttpClient for downstream services with timeouts
 builder.Services.AddHttpClient("CatalogService", client =>
 {
     client.BaseAddress = new Uri(builder.Configuration["Services:Catalog"] ?? "http://localhost:5001");
+    client.Timeout = TimeSpan.FromSeconds(5);
 });
 builder.Services.AddHttpClient("CartService", client =>
 {
     client.BaseAddress = new Uri(builder.Configuration["Services:Cart"] ?? "http://localhost:5002");
+    client.Timeout = TimeSpan.FromSeconds(5);
 });
 builder.Services.AddHttpClient("OrdersService", client =>
 {
     client.BaseAddress = new Uri(builder.Configuration["Services:Orders"] ?? "http://localhost:5003");
+    client.Timeout = TimeSpan.FromSeconds(5);
 });
 builder.Services.AddHttpClient("UsersService", client =>
 {
     client.BaseAddress = new Uri(builder.Configuration["Services:Users"] ?? "http://localhost:5004");
+    client.Timeout = TimeSpan.FromSeconds(5);
 });
 builder.Services.AddHttpClient("PaymentsService", client =>
 {
     client.BaseAddress = new Uri(builder.Configuration["Services:Payments"] ?? "http://localhost:5005");
+    client.Timeout = TimeSpan.FromSeconds(5);
 });
 
 var app = builder.Build();
@@ -52,20 +57,107 @@ app.UseCors();
 
 app.MapGet("/api/catalog/products", async (IHttpClientFactory clientFactory) =>
 {
-    var client = clientFactory.CreateClient("CatalogService");
-    var response = await client.GetAsync("/api/products");
-    return Results.Ok(await response.Content.ReadAsStringAsync());
+    try
+    {
+        var client = clientFactory.CreateClient("CatalogService");
+        var response = await client.GetAsync("/api/products");
+        if (!response.IsSuccessStatusCode)
+        {
+            return Results.StatusCode((int)response.StatusCode);
+        }
+        var stream = await response.Content.ReadAsStreamAsync();
+        return Results.Stream(stream, "application/json");
+    }
+    catch (Exception ex)
+    {
+        return Results.Problem($"Error fetching products: {ex.Message}");
+    }
 })
 .WithName("GetProducts")
 .WithOpenApi();
 
 app.MapGet("/api/catalog/products/{id}", async (string id, IHttpClientFactory clientFactory) =>
 {
-    var client = clientFactory.CreateClient("CatalogService");
-    var response = await client.GetAsync($"/api/products/{id}");
-    return Results.Ok(await response.Content.ReadAsStringAsync());
+    try
+    {
+        var client = clientFactory.CreateClient("CatalogService");
+        var response = await client.GetAsync($"/api/products/{id}");
+        if (!response.IsSuccessStatusCode)
+        {
+            return Results.StatusCode((int)response.StatusCode);
+        }
+        var stream = await response.Content.ReadAsStreamAsync();
+        return Results.Stream(stream, "application/json");
+    }
+    catch (Exception ex)
+    {
+        return Results.Problem($"Error fetching product: {ex.Message}");
+    }
 })
 .WithName("GetProduct")
+.WithOpenApi();
+
+app.MapGet("/api/catalog/collections", async (IHttpClientFactory clientFactory) =>
+{
+    try
+    {
+        var client = clientFactory.CreateClient("CatalogService");
+        var response = await client.GetAsync("/api/collections");
+        if (!response.IsSuccessStatusCode)
+        {
+            return Results.StatusCode((int)response.StatusCode);
+        }
+        var jsonContent = await response.Content.ReadAsStringAsync();
+        return Results.Content(jsonContent, "application/json");
+    }
+    catch (Exception ex)
+    {
+        return Results.Problem($"Error fetching collections: {ex.Message}");
+    }
+})
+.WithName("GetCollections")
+.WithOpenApi();
+
+app.MapGet("/api/catalog/collections/{slug}", async (string slug, IHttpClientFactory clientFactory) =>
+{
+    try
+    {
+        var client = clientFactory.CreateClient("CatalogService");
+        var response = await client.GetAsync($"/api/collections/{slug}");
+        if (!response.IsSuccessStatusCode)
+        {
+            return Results.StatusCode((int)response.StatusCode);
+        }
+        var jsonContent = await response.Content.ReadAsStringAsync();
+        return Results.Content(jsonContent, "application/json");
+    }
+    catch (Exception ex)
+    {
+        return Results.Problem($"Error fetching collection: {ex.Message}");
+    }
+})
+.WithName("GetCollection")
+.WithOpenApi();
+
+app.MapGet("/api/catalog/collections/{slug}/products", async (string slug, IHttpClientFactory clientFactory) =>
+{
+    try
+    {
+        var client = clientFactory.CreateClient("CatalogService");
+        var response = await client.GetAsync($"/api/collections/{slug}/products");
+        if (!response.IsSuccessStatusCode)
+        {
+            return Results.StatusCode((int)response.StatusCode);
+        }
+        var jsonContent = await response.Content.ReadAsStringAsync();
+        return Results.Content(jsonContent, "application/json");
+    }
+    catch (Exception ex)
+    {
+        return Results.Problem($"Error fetching collection products: {ex.Message}");
+    }
+})
+.WithName("GetCollectionProducts")
 .WithOpenApi();
 
 app.MapGet("/api/cart", async (IHttpClientFactory clientFactory) =>

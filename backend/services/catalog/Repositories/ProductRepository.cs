@@ -1,52 +1,56 @@
+using Catalog.Data;
 using Catalog.Models;
-using MongoDB.Driver;
+using Microsoft.EntityFrameworkCore;
 
 namespace Catalog.Repositories;
 
 /// <summary>
-/// MongoDB implementation of IProductRepository
+/// DEPRECATED: Use Repository{Product} instead via IRepository{Product}
+/// This adapter keeps the old interface working with the new generic repository
+/// Maintained for backward compatibility during transition
 /// </summary>
+[Obsolete("Use Repository<Product> from generic repository pattern instead")]
 public class ProductRepository : IProductRepository
 {
-    private readonly IMongoDatabase _database;
-    private readonly IMongoCollection<Product> _collection;
+    private readonly IRepository<Product> _genericRepository;
 
-    public ProductRepository(IMongoDatabase database)
+    public ProductRepository(IRepository<Product> genericRepository)
     {
-        _database = database;
-        _collection = database.GetCollection<Product>("products");
+        _genericRepository = genericRepository;
     }
 
     public async Task<IEnumerable<Product>> GetAllAsync()
     {
-        return await _collection.Find(_ => true).ToListAsync();
+        return await _genericRepository.GetAllAsync();
     }
 
     public async Task<Product?> GetByIdAsync(string id)
     {
-        return await _collection.Find(p => p.Id == id).FirstOrDefaultAsync();
+        return await _genericRepository.GetByIdAsync(id);
     }
 
-    public async Task<IEnumerable<Product>> GetByCategoryAsync(string category)
+    public async Task<IEnumerable<Product>> GetByCollectionIdAsync(string collectionId)
     {
-        return await _collection.Find(p => p.Category == category).ToListAsync();
+        return await _genericRepository.FindAsync(p => p.CollectionId == collectionId);
+    }
+
+    public async Task<IEnumerable<Product>> GetByCollectionSlugAsync(string collectionSlug)
+    {
+        return await _genericRepository.FindAsync(p => p.CollectionSlug == collectionSlug);
     }
 
     public async Task<Product> CreateAsync(Product product)
     {
-        await _collection.InsertOneAsync(product);
-        return product;
+        return await _genericRepository.CreateAsync(product);
     }
 
     public async Task<bool> UpdateAsync(string id, Product product)
     {
-        var result = await _collection.ReplaceOneAsync(p => p.Id == id, product);
-        return result.ModifiedCount > 0;
+        return await _genericRepository.UpdateAsync(product);
     }
 
     public async Task<bool> DeleteAsync(string id)
     {
-        var result = await _collection.DeleteOneAsync(p => p.Id == id);
-        return result.DeletedCount > 0;
+        return await _genericRepository.DeleteAsync(id);
     }
 }

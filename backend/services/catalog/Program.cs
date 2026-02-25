@@ -1,9 +1,10 @@
+using Catalog.Data;
 using Catalog.Endpoints;
-using Catalog.Models;
-using Catalog.Repositories;
-using Catalog.Services;
-using MongoDB.Driver;
+using Catalog.Extensions;
 using Shared.Extensions;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Http.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,32 +12,29 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// MongoDB configuration
-builder.Services.AddSingleton<IMongoClient>(sp =>
+// Configure JSON serialization to use camelCase for API responses
+builder.Services.ConfigureHttpJsonOptions(options =>
 {
-    var connectionString = builder.Configuration["MongoDB:ConnectionString"];
-    return new MongoClient(connectionString);
+    options.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+    options.SerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+    options.SerializerOptions.WriteIndented = false;
 });
 
-builder.Services.AddScoped(sp =>
+// Also configure the default Json serializer for consistency
+builder.Services.Configure<JsonOptions>(options =>
 {
-    var client = sp.GetRequiredService<IMongoClient>();
-    var databaseName = builder.Configuration["MongoDB:DatabaseName"];
-    return client.GetDatabase(databaseName);
+    options.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+    options.SerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+    options.SerializerOptions.WriteIndented = false;
 });
 
-// Register repository and service
-builder.Services.AddScoped<IProductRepository, ProductRepository>();
-builder.Services.AddScoped<ProductService>();
+// Add catalog services (includes DbContext and repositories)
+builder.Services.AddCatalogServices(builder.Configuration);
 
 var app = builder.Build();
 
-// Seed data on startup
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<IMongoDatabase>();
-    await SeedData.SeedProducts(db);
-}
+// Apply migrations and seed database
+await app.MigrateAndSeedDatabaseAsync();
 
 if (app.Environment.IsDevelopment())
 {
@@ -49,5 +47,6 @@ app.UseGlobalExceptionHandler();
 
 // Map endpoints
 app.MapCatalogEndpoints();
+app.MapCollectionEndpoints();
 
 app.Run();

@@ -13,6 +13,8 @@ import {
   User,
   ShoppingCart,
 } from "lucide-react";
+import { getCollections, type Collection } from "@/lib/api/catalog";
+
 export default function Header() {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -21,21 +23,35 @@ export default function Header() {
   const navLinkRefs = useRef<(HTMLAnchorElement | null)[]>([]);
   const socialLinkRefs = useRef<(HTMLAnchorElement | null)[]>([]);
   const rightIconsRef = useRef<HTMLDivElement | null>(null);
+  const [collections, setCollections] = useState<Collection[]>([]);
 
-  const navLinks = useMemo(
-    () => [
-      { href: "/", label: "HOME" },
-      { href: "/collections/relaxed-fit", label: "ÁO THUN RELAXED FIT" },
-      { href: "/collections/long-sleeve", label: "ÁO THUN DÀI TAY" },
-      { href: "/collections/ringer", label: "ÁO THUN RINGER" },
-      { href: "/collections/hoodie", label: "ÁO HOODIE" },
-      { href: "/collections/sweater", label: "ÁO SWEATER" },
-      { href: "/collections/jogger", label: "QUẦN JOGGER & ỐNG SUÔNG" },
-      { href: "/collections/soft-routine", label: "SOFT ROUTINE" },
-      { href: "/contact", label: "CONTACT" },
-    ],
-    [],
-  );
+  // Fetch collections on mount
+  useEffect(() => {
+    const fetchCollections = async () => {
+      try {
+        const data = await getCollections();
+        setCollections(data);
+      } catch (error) {
+        console.error("Failed to fetch collections:", error);
+      }
+    };
+    fetchCollections();
+  }, []);
+
+  const navLinks = useMemo(() => {
+    const links = [{ href: "/", label: "HOME" }];
+
+    // Add collection links dynamically
+    collections.forEach((collection) => {
+      links.push({
+        href: `/collections/${collection.slug}`,
+        label: collection.name.toUpperCase(),
+      });
+    });
+
+    links.push({ href: "/contact", label: "CONTACT" });
+    return links;
+  }, [collections]);
 
   const socialLinks = useMemo(
     () => [
@@ -51,49 +67,29 @@ export default function Header() {
     ("dark" | "light")[]
   >([]);
 
-  useEffect(() => {
-    // Initialize mounted flag and themes on mount
-    setMounted(true);
-    setNavLinkThemes(navLinks.map(() => "dark"));
-    setSocialLinkThemes(socialLinks.map(() => "dark"));
-    // Trigger theme update immediately after mount
-    setTimeout(() => {
-      triggerThemeUpdate();
-    }, 0);
-  }, [navLinks, socialLinks]);
+  const resolveThemeAtPoint = (x: number, y: number) => {
+    if (typeof document === "undefined") return undefined;
+    const stack = document.elementsFromPoint(x, y);
+    const section = stack
+      .map((element) => (element as HTMLElement).closest("[data-nav-theme]"))
+      .find(Boolean) as HTMLElement | undefined;
+    const theme = section?.getAttribute("data-nav-theme");
+    return theme === "light" || theme === "dark" ? theme : undefined;
+  };
 
-  useEffect(() => {
-    // Handle route changes - reset scroll to top and trigger theme update
-    window.scrollTo(0, 0);
-    // Trigger theme update after a short delay to allow DOM to settle
-    setTimeout(() => {
-      triggerThemeUpdate();
-    }, 100);
-  }, [pathname]);
+  const sampleCenter = (element: HTMLElement | null) => {
+    if (!element) return undefined;
+    const rect = element.getBoundingClientRect();
+    const x = Math.min(
+      Math.max(rect.left + rect.width / 2, 0),
+      window.innerWidth - 1,
+    );
+    // Sample directly below the element (at its vertical center + 60px to find content below)
+    const y = Math.min(rect.top + rect.height, window.innerHeight - 1);
+    return resolveThemeAtPoint(x, y);
+  };
 
   const triggerThemeUpdate = () => {
-    const resolveThemeAtPoint = (x: number, y: number) => {
-      if (typeof document === "undefined") return undefined;
-      const stack = document.elementsFromPoint(x, y);
-      const section = stack
-        .map((element) => (element as HTMLElement).closest("[data-nav-theme]"))
-        .find(Boolean) as HTMLElement | undefined;
-      const theme = section?.getAttribute("data-nav-theme");
-      return theme === "light" || theme === "dark" ? theme : undefined;
-    };
-
-    const sampleCenter = (element: HTMLElement | null) => {
-      if (!element) return undefined;
-      const rect = element.getBoundingClientRect();
-      const x = Math.min(
-        Math.max(rect.left + rect.width / 2, 0),
-        window.innerWidth - 1,
-      );
-      // Sample further down the page (at 20% of viewport height) to find actual content theme
-      const y = Math.max(window.innerHeight * 0.2, 0);
-      return resolveThemeAtPoint(x, y);
-    };
-
     setNavLinkThemes((prevThemes) =>
       navLinkRefs.current.map(
         (node, index) => sampleCenter(node) ?? prevThemes[index] ?? "dark",
@@ -112,47 +108,46 @@ export default function Header() {
   };
 
   useEffect(() => {
-    const resolveThemeAtPoint = (x: number, y: number) => {
-      if (typeof document === "undefined") return undefined;
-      const stack = document.elementsFromPoint(x, y);
-      const section = stack
-        .map((element) => (element as HTMLElement).closest("[data-nav-theme]"))
-        .find(Boolean) as HTMLElement | undefined;
-      const theme = section?.getAttribute("data-nav-theme");
-      return theme === "light" || theme === "dark" ? theme : undefined;
+    // Initialize mounted flag and themes on mount
+    setMounted(true);
+    setNavLinkThemes(navLinks.map(() => "dark"));
+    setSocialLinkThemes(socialLinks.map(() => "dark"));
+    // Trigger theme update immediately after mount
+    setTimeout(() => {
+      triggerThemeUpdate();
+    }, 0);
+  }, [navLinks, socialLinks]);
+
+  useEffect(() => {
+    // Handle route changes - reset scroll to top
+    window.scrollTo(0, 0);
+
+    // Listen for data load completion after route change
+    const handleDataLoadComplete = () => {
+      triggerThemeUpdate();
+      window.removeEventListener("dataLoadComplete", handleDataLoadComplete);
     };
 
-    const sampleCenter = (element: HTMLElement | null) => {
-      if (!element) return undefined;
-      const rect = element.getBoundingClientRect();
-      const x = Math.min(
-        Math.max(rect.left + rect.width / 2, 0),
-        window.innerWidth - 1,
-      );
-      // Sample further down the page (at 20% of viewport height) to find actual content theme
-      const y = Math.max(window.innerHeight * 0.2, 0);
-      return resolveThemeAtPoint(x, y);
-    };
+    window.addEventListener("dataLoadComplete", handleDataLoadComplete);
 
+    // Fallback: trigger after 2 seconds if data load event doesn't fire
+    const fallbackTimeout = setTimeout(() => {
+      triggerThemeUpdate();
+    }, 2000);
+
+    return () => {
+      window.removeEventListener("dataLoadComplete", handleDataLoadComplete);
+      clearTimeout(fallbackTimeout);
+    };
+  }, [pathname]);
+
+  useEffect(() => {
     const updateThemes = () => {
-      setNavLinkThemes((prevThemes) =>
-        navLinkRefs.current.map(
-          (node, index) => sampleCenter(node) ?? prevThemes[index] ?? "dark",
-        ),
-      );
-      setSocialLinkThemes((prevThemes) =>
-        socialLinkRefs.current.map(
-          (node, index) => sampleCenter(node) ?? prevThemes[index] ?? "dark",
-        ),
-      );
-
-      const rightTheme = sampleCenter(rightIconsRef.current);
-      if (rightTheme) {
-        setNavThemeRight(rightTheme);
-      }
+      requestAnimationFrame(() => {
+        triggerThemeUpdate();
+      });
     };
 
-    triggerThemeUpdate();
     window.addEventListener("scroll", updateThemes, { passive: true });
     window.addEventListener("resize", updateThemes);
     return () => {
@@ -177,9 +172,9 @@ export default function Header() {
       className="fixed inset-0 z-50 pointer-events-none"
       suppressHydrationWarning
     >
-      {/* Brand area - top left */}
+      {/* Brand area - top left (desktop only - hidden on tablet and mobile) */}
       <div
-        className="pointer-events-auto fixed left-6 md:left-56 top-8 z-50"
+        className="pointer-events-auto fixed lg:left-[16.5%] top-8 z-50 hidden lg:block"
         suppressHydrationWarning
       >
         <Link
@@ -192,13 +187,13 @@ export default function Header() {
         </Link>
       </div>
 
-      {/* Left fixed navbar */}
+      {/* Left fixed navbar (desktop only - hidden on tablet and mobile) */}
       <div
-        className="pointer-events-auto fixed left-0 top-0 hidden h-full w-48 flex-col justify-between px-6 py-6 md:flex"
+        className="pointer-events-auto fixed left-0 top-0 hidden h-full w-48 flex-col justify-between px-6 py-6 lg:flex"
         suppressHydrationWarning
       >
         {/* Navigation links at top */}
-        <nav className="flex flex-col items-start space-y-3 text-xs font-normal tracking-widest">
+        <nav className="flex flex-col items-start space-y-3 text-[10px] font-normal  tracking-widest">
           {navLinks.map((item, index) => {
             const isLight = navLinkThemes[index] === "light";
             const linkTextColor = isLight ? "text-black" : "text-white";
@@ -248,9 +243,10 @@ export default function Header() {
         </div>
       </div>
 
+      {/* Right icons (desktop only - hidden on tablet and mobile) */}
       <div
         ref={rightIconsRef}
-        className={`pointer-events-auto fixed right-8 top-8 hidden items-center space-x-6 md:flex ${textColorRight} z-50`}
+        className={`pointer-events-auto fixed right-8 top-8 hidden items-center space-x-6 lg:flex ${textColorRight} z-50`}
         suppressHydrationWarning
       >
         <button className={`${hoverColorRight} transition`}>
@@ -269,17 +265,24 @@ export default function Header() {
         </Link>
       </div>
 
-      <div className="pointer-events-auto fixed right-6 top-6 md:hidden">
+      {/* Tablet and Mobile header with brand and menu button (shown below lg) */}
+      <div className="pointer-events-auto fixed top-0 left-0 right-0 h-20 bg-white lg:hidden z-40 flex items-center justify-between px-4">
+        <Link href="/" className="text-lg font-semibold text-black">
+          THE NEW
+          <br />
+          ORIGINALS
+        </Link>
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className={`${textColorRight} ${hoverColorRight} transition`}
+          className="text-black hover:text-gray-700 transition"
         >
           {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
       </div>
 
+      {/* Mobile/Tablet menu overlay (shown below lg) */}
       {mobileMenuOpen && (
-        <div className="pointer-events-auto fixed inset-0 bg-black/90 text-white p-6 md:hidden">
+        <div className="pointer-events-auto fixed inset-0 bg-black/90 text-white p-6 lg:hidden">
           <div className="flex justify-between items-center mb-8">
             <Link href="/" className="text-xl font-semibold uppercase">
               the new originals

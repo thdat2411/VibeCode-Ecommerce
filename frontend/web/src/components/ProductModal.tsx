@@ -1,20 +1,24 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
-import { X, ShoppingCart } from "lucide-react";
+import { ShoppingCart } from "lucide-react";
+import { Product } from "@/lib/api/catalog";
 
 interface ProductModalProps {
   isOpen: boolean;
   onClose: () => void;
-  id: string;
-  name: string;
-  brand: string;
-  price: number;
+  product?: Product;
+  initialColor?: string;
+  // For sample products from landing page
+  id?: string;
+  name?: string;
+  brand?: string;
+  price?: number;
   compareAtPrice?: number;
-  image: string;
+  image?: string;
   image2?: string;
-  colors: string[];
+  colors?: string[];
   isOnSale?: boolean;
   saleLabel?: string;
 }
@@ -22,34 +26,89 @@ interface ProductModalProps {
 export default function ProductModal({
   isOpen,
   onClose,
+  product,
+  initialColor,
   id,
-  name,
-  brand,
-  price,
-  compareAtPrice,
-  image,
-  image2,
-  colors,
-  isOnSale,
-  saleLabel = "ĐANG GIẢM GIÁ",
+  name: propName,
+  brand: propBrand,
+  price: propPrice,
+  compareAtPrice: propCompareAtPrice,
+  image: propImage,
+  image2: propImage2,
+  colors: propColors,
+  isOnSale: propIsOnSale,
+  saleLabel: propSaleLabel,
 }: ProductModalProps) {
-  const [selectedColor, setSelectedColor] = useState(colors[0]);
+  // Use product data if available, otherwise use individual props
+  const colors =
+    product?.variantOptions?.find((opt) => opt.name === "Color")?.values ||
+    propColors ||
+    [];
+  const displayName = product?.name || propName || "";
+  const displayBrand = propBrand || "THE NEW ORIGINALS";
+  const displayPrice = propPrice || product?.price || 0;
+  const displayCompareAtPrice =
+    propCompareAtPrice ||
+    (product?.price && product.price > 500000 ? product.price : undefined);
+  const displayIsOnSale =
+    propIsOnSale ||
+    (displayPrice > 500000 && displayCompareAtPrice !== undefined);
+  const displaySaleLabel = propSaleLabel || "ĐANG GIẢM GIÁ";
+  const displayImage = propImage || product?.thumbnailImage || "";
+  const displayImage2 = propImage2;
+
+  const [selectedColor, setSelectedColor] = useState(initialColor || colors[0]);
   const [selectedSize, setSelectedSize] = useState("XS");
   const [quantity, setQuantity] = useState(1);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isHovering, setIsHovering] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
 
+  // Get images for selected color
+  const getColorImages = (color: string) => {
+    if (product?.variantImages) {
+      const variantImage = product.variantImages.find(
+        (vi) => vi.variantType === "Color" && vi.variantValue === color,
+      );
+      return variantImage?.images || [product.thumbnailImage];
+    }
+    return [propImage || ""];
+  };
+
+  // Get thumbnail for color
+  const getColorThumbnail = (color: string) => {
+    const images = getColorImages(color);
+    return images[0];
+  };
+
   const sizes = ["XS", "S", "M", "L", "XL", "2XL"];
-  const images = image2 ? [image, image2] : [image];
-  const displayImage = images[selectedImageIndex];
+  const images = getColorImages(selectedColor);
+  const displayImageUrl = images[selectedImageIndex] || displayImage;
+
+  const hasDiscount = displayPrice > 500000;
+  const discountPrice = hasDiscount ? displayPrice * 0.5 : displayPrice;
+  const finalPrice = hasDiscount ? discountPrice : displayPrice;
+  const finalCompareAtPrice = hasDiscount
+    ? displayPrice
+    : displayCompareAtPrice;
+  const finalIsOnSale = hasDiscount || displayIsOnSale;
+
+  // Reset image index when color changes
+  useEffect(() => {
+    setSelectedImageIndex(0);
+  }, [selectedColor]);
 
   if (!isOpen) return null;
+
+  // Guard: if no product data and no name provided, don't render
+  if (!product && !propName) {
+    return null;
+  }
 
   const handleAddToCart = () => {
     // TODO: Add to cart logic
     console.log({
-      productId: id,
+      productId: product?.id || id,
       color: selectedColor,
       size: selectedSize,
       quantity,
@@ -96,14 +155,30 @@ export default function ProductModal({
             onClick={handleClose}
             onMouseEnter={() => setIsHovering(true)}
             onMouseLeave={() => setIsHovering(false)}
-            className={`absolute top-4 right-4 z-10 bg-white rounded-full p-2 hover:bg-gray-100 transition-colors ${
+            style={
               isHovering
-                ? "animate-[spinIn_0.4s_ease-in-out_forwards]"
-                : "animate-[spinOut_0.4s_ease-in-out_forwards]"
-            }`}
+                ? { animation: "scale-110 0.3s ease-out forwards" }
+                : { animation: "scale-110-reverse 0.3s ease-out forwards" }
+            }
+            className="absolute top-4 right-4 z-10 h-10 w-10 bg-black border border-black flex items-center justify-center rounded"
             aria-label="Close modal"
           >
-            <X size={24} className="text-black" />
+            <span
+              style={
+                isHovering
+                  ? {
+                      animation: "spin-180 0.3s linear 1",
+                      color: "white",
+                    }
+                  : {
+                      animation: "spin-180-reverse 0.3s linear 1",
+                      color: "white",
+                    }
+              }
+              className="inline-block text-xl"
+            >
+              ✕
+            </span>
           </button>
 
           {/* Modal Content */}
@@ -113,56 +188,43 @@ export default function ProductModal({
               {/* Main Image */}
               <div className="relative bg-gray-100 aspect-square overflow-hidden rounded">
                 <Image
-                  src={displayImage}
-                  alt={name}
+                  src={displayImageUrl}
+                  alt={displayName}
                   fill
-                  className="object-cover"
+                  className="object-cover transition-all duration-500"
                   sizes="w-full h-full"
                 />
 
                 {/* Sale Badge */}
-                {isOnSale && (
+                {finalIsOnSale && (
                   <div className="absolute top-3 left-3 bg-red-600 text-white px-2 py-1 rounded text-xs ">
-                    {saleLabel}
+                    {displaySaleLabel}
                   </div>
                 )}
               </div>
 
-              {/* Thumbnail */}
-              {image2 && (
+              {/* Image Thumbnails */}
+              {images.length > 1 && (
                 <div className="flex gap-2">
-                  <button
-                    onClick={() => setSelectedImageIndex(0)}
-                    className={`relative w-16 h-16 bg-gray-100 rounded cursor-pointer border-2 transition ${
-                      selectedImageIndex === 0
-                        ? "border-black"
-                        : "border-gray-300 opacity-60 hover:opacity-100"
-                    }`}
-                  >
-                    <Image
-                      src={image}
-                      alt="View 1"
-                      fill
-                      className="object-cover rounded"
-                      sizes="64px"
-                    />
-                  </button>
-                  <button
-                    onClick={() => setSelectedImageIndex(1)}
-                    className={`relative w-16 h-16 bg-gray-100 rounded cursor-pointer border-2 transition ${
-                      selectedImageIndex === 1
-                        ? "border-black"
-                        : "border-gray-300 opacity-60 hover:opacity-100"
-                    }`}
-                  >
-                    <Image
-                      src={image2}
-                      alt="View 2"
-                      fill
-                      className="object-cover rounded"
-                      sizes="64px"
-                    />
-                  </button>
+                  {images.map((img, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setSelectedImageIndex(idx)}
+                      className={`relative w-16 h-16 bg-gray-100 rounded cursor-pointer border-2 transition ${
+                        selectedImageIndex === idx
+                          ? "border-black"
+                          : "border-gray-300 opacity-60 hover:opacity-100"
+                      }`}
+                    >
+                      <Image
+                        src={img}
+                        alt={`View ${idx + 1}`}
+                        fill
+                        className="object-cover rounded"
+                        sizes="64px"
+                      />
+                    </button>
+                  ))}
                 </div>
               )}
             </div>
@@ -172,49 +234,61 @@ export default function ProductModal({
               {/* Brand & Name */}
               <div>
                 <p className="text-xs text-gray-500 uppercase mb-1 md:mb-2 tracking-widest">
-                  {brand}
+                  {displayBrand}
                 </p>
                 <h2 className="text-base md:text-xl lg:text-2xl  text-black uppercase mb-1 md:mb-2">
-                  {name}
+                  {displayName}
                 </h2>
               </div>
 
               {/* Price */}
               <div className="flex items-center gap-2 md:gap-3">
                 <span className="text-base md:text-lg lg:text-2xl  text-black">
-                  ₫{price.toLocaleString("vi-VN")}
+                  ₫{finalPrice.toLocaleString("vi-VN")}
                 </span>
-                {compareAtPrice && (
+                {finalCompareAtPrice && (
                   <span className="text-xs md:text-sm text-gray-400 line-through">
-                    ₫{compareAtPrice.toLocaleString("vi-VN")}
+                    ₫{finalCompareAtPrice.toLocaleString("vi-VN")}
                   </span>
                 )}
               </div>
 
               {/* Sale Label */}
-              {isOnSale && (
-                <p className="text-xs md:text-sm  text-red-600">{saleLabel}</p>
+              {finalIsOnSale && (
+                <p className="text-xs md:text-sm  text-red-600">
+                  {displaySaleLabel}
+                </p>
               )}
 
-              {/* Color Selection */}
+              {/* Color Selection with Thumbnails */}
               <div>
-                <label className="block text-xs md:text-sm  text-black mb-2 md:mb-3 uppercase">
-                  Màu sắc
+                <label className="block text-xs md:text-sm text-black mb-2 md:mb-3 uppercase">
+                  Màu sắc — {selectedColor}
                 </label>
                 <div className="flex gap-2 md:gap-3 flex-wrap">
-                  {colors.map((color) => (
-                    <button
-                      key={color}
-                      onClick={() => setSelectedColor(color)}
-                      className={`px-3 md:px-4 py-1 md:py-2 border-2 rounded text-xs md:text-sm font-medium transition ${
-                        selectedColor === color
-                          ? "border-black bg-black text-white"
-                          : "border-gray-300 text-black hover:border-black"
-                      }`}
-                    >
-                      {color}
-                    </button>
-                  ))}
+                  {colors.map((color) => {
+                    const thumbnail = getColorThumbnail(color);
+                    return (
+                      <button
+                        key={color}
+                        onClick={() => setSelectedColor(color)}
+                        className={`relative w-12 h-12 md:w-14 md:h-14 rounded-full border-2 overflow-hidden transition ${
+                          selectedColor === color
+                            ? "border-black"
+                            : "border-gray-300 hover:border-gray-500"
+                        }`}
+                        title={color}
+                      >
+                        <Image
+                          src={thumbnail}
+                          alt={color}
+                          fill
+                          className="object-cover"
+                          sizes="56px"
+                        />
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 

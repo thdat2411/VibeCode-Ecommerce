@@ -34,7 +34,7 @@ export default function ForgotPasswordPage() {
         className="min-h-screen bg-white flex items-center justify-center"
         data-nav-theme="light"
       >
-        <div className="max-w-7xl w-full px-4 sm:px-6 lg:px-8 md:ml-[25%] md:mr-[10%]">
+        <div className="max-w-7xl w-full px-4 sm:px-6 lg:px-8 lg:ml-[25%] lg:mr-[10%]">
           <div className="max-w-md mx-auto">
             <div className="text-center">
               <h2 className="text-2xl mb-6">EMAIL ĐÃ GỪI</h2>
@@ -66,7 +66,7 @@ export default function ForgotPasswordPage() {
       className="min-h-screen bg-white flex items-center justify-center"
       data-nav-theme="light"
     >
-      <div className="max-w-7xl w-full px-4 sm:px-6 lg:px-8 md:ml-[25%] md:mr-[10%]">
+      <div className="max-w-7xl w-full px-4 sm:px-6 lg:px-8 lg:ml-[25%] lg:mr-[10%]">
         <div className="max-w-md mx-auto">
           <div className="text-center mb-8">
             <h2 className="text-2xl mb-2 text-black">ĐẶT LẠI MẬT KHẨU</h2>

@@ -9,7 +9,29 @@ interface CatalogWrapperProps {
   products: Product[];
 }
 
-export function CatalogWrapper({ products }: CatalogWrapperProps) {
+// Normalize products to ensure all required fields are present
+function normalizeProducts(products: Product[]): Product[] {
+  return products
+    .filter(
+      (product): product is Product =>
+        product !== null && product !== undefined,
+    )
+    .map((product) => ({
+      ...product,
+      variantOptions: product.variantOptions || [],
+      variantImages: product.variantImages || [],
+    }));
+}
+
+export function CatalogWrapper({ products: rawProducts }: CatalogWrapperProps) {
+  const products = normalizeProducts(rawProducts);
+
+  // Debug logging
+  if (typeof window !== "undefined") {
+    console.log("CatalogWrapper received rawProducts:", rawProducts);
+    console.log("CatalogWrapper normalized products:", products);
+  }
+
   const [filteredProducts, setFilteredProducts] = useState<Product[]>(products);
 
   return (

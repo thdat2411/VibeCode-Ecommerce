@@ -5,20 +5,43 @@ const BFF_URL = process.env.NEXT_PUBLIC_BFF_URL || 'http://localhost:5000';
 
 const apiClient = axios.create({
     baseURL: BFF_URL,
-    timeout: 10000,
+    timeout: 5000,
     headers: {
         'Content-Type': 'application/json',
     }
 });
+
+export interface Collection {
+    id: string;
+    name: string;
+    slug: string;
+    description: string;
+    displayOrder: number;
+    createdAt: string;
+}
+
+export interface VariantOption {
+    name: string;
+    values: string[];
+}
+
+export interface VariantImage {
+    variantType: string;
+    variantValue: string;
+    images: string[];
+}
 
 export interface Product {
     id: string;
     name: string;
     description: string;
     price: number;
+    collectionId: string;
+    collectionSlug: string;
     category: string;
-    images: string[];
-    variants: Record<string, string[]>;
+    thumbnailImage: string;
+    variantOptions: VariantOption[];
+    variantImages: VariantImage[];
     stock: number;
     createdAt: string;
 }
@@ -43,6 +66,55 @@ export async function getProductById(id: string): Promise<Product> {
     } catch (error) {
         if (error instanceof AxiosError) {
             throw new Error(error.response?.data?.message || 'Failed to fetch product');
+        }
+        throw error;
+    }
+}
+
+// Collections API
+export async function getCollections(): Promise<Collection[]> {
+    try {
+        const response = await apiClient.get<Collection[]>('/api/catalog/collections');
+        return response.data;
+    } catch (error) {
+        if (error instanceof AxiosError) {
+            throw new Error(error.response?.data?.message || 'Failed to fetch collections');
+        }
+        throw error;
+    }
+}
+
+export async function getCollectionBySlug(slug: string): Promise<Collection> {
+    try {
+        const response = await apiClient.get<Collection>(`/api/catalog/collections/${slug}`);
+        return response.data;
+    } catch (error) {
+        if (error instanceof AxiosError) {
+            throw new Error(error.response?.data?.message || 'Failed to fetch collection');
+        }
+        throw error;
+    }
+}
+
+export async function getCollectionProducts(slug: string): Promise<{ collection: Collection; products: Product[]; count: number }> {
+    try {
+        const response = await apiClient.get<{ collection: Collection; products: Product[]; count: number }>(`/api/catalog/collections/${slug}/products`);
+        console.log(`getCollectionProducts(${slug}) raw response:`, response.data);
+
+        // Validate products array
+        if (response.data.products) {
+            const productsWithIssues = response.data.products
+                .map((p, i) => p === null || p === undefined ? `[${i}] = ${p}` : null)
+                .filter(Boolean);
+            if (productsWithIssues.length > 0) {
+                console.warn('Found null/undefined products:', productsWithIssues);
+            }
+        }
+
+        return response.data;
+    } catch (error) {
+        if (error instanceof AxiosError) {
+            throw new Error(error.response?.data?.message || 'Failed to fetch collection products');
         }
         throw error;
     }

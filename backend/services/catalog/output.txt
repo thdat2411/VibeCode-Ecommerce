@@ -1,0 +1,23 @@
+Building...
+warn: Microsoft.EntityFrameworkCore.Model.Validation[20601]
+      The 'bool' property 'IsActive' on entity type 'Collection' is configured with a database-generated default. This default will always be used for inserts when the property has the value 'false', since this is the CLR default for the 'bool' type. Consider using the nullable 'bool?' type instead, so that the default will only be used for inserts when the property value is 'null'.
+warn: Microsoft.EntityFrameworkCore.Model.Validation[20601]
+      The 'bool' property 'IsActive' on entity type 'Product' is configured with a database-generated default. This default will always be used for inserts when the property has the value 'false', since this is the CLR default for the 'bool' type. Consider using the nullable 'bool?' type instead, so that the default will only be used for inserts when the property value is 'null'.
+warn: Microsoft.EntityFrameworkCore.Model.Validation[20601]
+      The 'bool' property 'IsActive' on entity type 'ProductSku' is configured with a database-generated default. This default will always be used for inserts when the property has the value 'false', since this is the CLR default for the 'bool' type. Consider using the nullable 'bool?' type instead, so that the default will only be used for inserts when the property value is 'null'.
+⚠ Database connection failed (network issue): The requested name is valid, but no data of the requested type was found.
+  The application will start but database operations will fail.
+  Please check:
+  1. Network connectivity
+  2. VPN/Firewall settings
+  3. Database connection string in appsettings.json
+info: Microsoft.Hosting.Lifetime[14]
+      Now listening on: http://localhost:5001
+info: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+info: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Development
+info: Microsoft.Hosting.Lifetime[0]
+      Content root path: D:\CODING\AgentCoding\backend\services\catalog
+info: Microsoft.Hosting.Lifetime[0]
+      Application is shutting down...

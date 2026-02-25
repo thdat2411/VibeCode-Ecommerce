@@ -50,7 +50,7 @@ export function CatalogResults({ products, isLoading }: CatalogResultsProps) {
           >
             <div className="aspect-square relative mb-4 bg-gray-100 overflow-hidden rounded-lg">
               <Image
-                src={product.images[0]}
+                src={product.thumbnailImage}
                 alt={product.name}
                 fill
                 className="object-cover group-hover:scale-105 transition-transform duration-300"
