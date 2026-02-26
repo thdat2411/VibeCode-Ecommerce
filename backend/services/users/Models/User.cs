@@ -1,30 +1,33 @@
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace Users.Models;
 
-public record User
+public class User
 {
-    public string Id { get; init; } = Guid.NewGuid().ToString();
-    public string Email { get; init; } = string.Empty;
+    public string Id { get; set; } = Guid.NewGuid().ToString();
+    public string Email { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
-    public string PasswordHash { get; init; } = string.Empty;
+    public string PasswordHash { get; set; } = string.Empty;
     public string? Phone { get; set; }
     public string? GoogleId { get; set; }
     public Address? ShippingAddress { get; set; }
     public List<AddressData> Addresses { get; set; } = new();
-    public DateTime CreatedAt { get; init; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
 
-public record Address
+public class Address
 {
-    public string Street { get; init; } = string.Empty;
-    public string City { get; init; } = string.Empty;
-    public string State { get; init; } = string.Empty;
-    public string ZipCode { get; init; } = string.Empty;
-    public string Country { get; init; } = string.Empty;
+    public string Street { get; set; } = string.Empty;
+    public string City { get; set; } = string.Empty;
+    public string State { get; set; } = string.Empty;
+    public string ZipCode { get; set; } = string.Empty;
+    public string Country { get; set; } = string.Empty;
 }
 
 public class AddressData
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();
+    public string UserId { get; set; } = string.Empty;
     public string FirstName { get; set; } = string.Empty;
     public string LastName { get; set; } = string.Empty;
     public string? Company { get; set; }

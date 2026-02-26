@@ -34,8 +34,7 @@ namespace Catalog.Migrations
                 name: "is_active",
                 table: "products",
                 type: "boolean",
-                nullable: false,
-                defaultValue: true);
+                nullable: false);
 
             migrationBuilder.AddColumn<int>(
                 name: "total_stock",
@@ -48,8 +47,7 @@ namespace Catalog.Migrations
                 name: "is_active",
                 table: "collections",
                 type: "boolean",
-                nullable: false,
-                defaultValue: true);
+                nullable: false);
 
             migrationBuilder.AddColumn<string>(
                 name: "parent_id",
@@ -67,7 +65,7 @@ namespace Catalog.Migrations
                     variant_values = table.Column<string>(type: "text", nullable: false),
                     stock = table.Column<int>(type: "integer", nullable: false, defaultValue: 0),
                     price_override = table.Column<decimal>(type: "numeric(10,2)", precision: 10, scale: 2, nullable: true),
-                    is_active = table.Column<bool>(type: "boolean", nullable: false, defaultValue: true)
+                    is_active = table.Column<bool>(type: "boolean", nullable: false)
                 },
                 constraints: table =>
                 {

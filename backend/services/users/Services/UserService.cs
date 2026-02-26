@@ -108,9 +108,9 @@ public class UserService
 
         if (existingUser.GoogleId != idToken)
         {
-            var updatedUser = existingUser with { GoogleId = idToken };
-            await _repository.UpdateAsync(existingUser.Id, updatedUser);
-            return updatedUser;
+            existingUser.GoogleId = idToken;
+            await _repository.UpdateAsync(existingUser.Id, existingUser);
+            return existingUser;
         }
 
         return existingUser;
@@ -120,15 +120,12 @@ public class UserService
     {
         var user = await GetUserByIdAsync(id);
 
-        var updatedUser = user with
-        {
-            Name = request.Name ?? user.Name,
-            Phone = request.Phone ?? user.Phone,
-            ShippingAddress = request.ShippingAddress ?? user.ShippingAddress
-        };
+        user.Name = request.Name ?? user.Name;
+        user.Phone = request.Phone ?? user.Phone;
+        user.ShippingAddress = request.ShippingAddress ?? user.ShippingAddress;
 
-        await _repository.UpdateAsync(id, updatedUser);
-        return updatedUser;
+        await _repository.UpdateAsync(id, user);
+        return user;
     }
 
     private void ValidateRegisterRequest(RegisterRequest request)

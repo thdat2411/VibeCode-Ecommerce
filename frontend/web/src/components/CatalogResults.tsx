@@ -60,8 +60,9 @@ export function CatalogResults({ products, isLoading }: CatalogResultsProps) {
             <h3 className="font-semibold mb-1 group-hover:underline">
               {product.name}
             </h3>
-            <p className="text-gray-600 text-sm mb-2">{product.category}</p>
-            <p className="font-bold">${product.price.toFixed(2)}</p>
+            <p className="font-bold">
+              ₫{product.price.toLocaleString("vi-VN")}
+            </p>
           </Link>
         ))}
       </div>

@@ -34,12 +34,19 @@ public class CartRepository : ICartRepository
         return cart ?? new CartResponse { Items = new List<CartItem>(), Total = 0 };
     }
 
+    private static string CompositeKey(string productId, string? size, string? color)
+        => $"{productId}|{size ?? ""}|{color ?? ""}";
+
+    private static string ItemKey(CartItem i)
+        => CompositeKey(i.ProductId, i.Size, i.Color);
+
     public async Task<CartResponse> AddItemAsync(string userId, CartItem item)
     {
         var cart = await GetCartAsync(userId);
         var items = cart.Items.ToList();
+        var key = ItemKey(item);
 
-        var existingItem = items.FirstOrDefault(i => i.ProductId == item.ProductId);
+        var existingItem = items.FirstOrDefault(i => ItemKey(i) == key);
         if (existingItem != null)
         {
             // Remove old item and add updated one
@@ -56,10 +63,11 @@ public class CartRepository : ICartRepository
         return cart;
     }
 
-    public async Task<CartResponse> RemoveItemAsync(string userId, string productId)
+    public async Task<CartResponse> RemoveItemAsync(string userId, string productId, string? size, string? color)
     {
         var cart = await GetCartAsync(userId);
-        var items = cart.Items.Where(i => i.ProductId != productId).ToList();
+        var key = CompositeKey(productId, size, color);
+        var items = cart.Items.Where(i => ItemKey(i) != key).ToList();
 
         cart = cart with { Items = items };
         await UpdateCartTotalAsync(userId, cart);

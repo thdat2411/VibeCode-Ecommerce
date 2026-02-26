@@ -153,11 +153,12 @@ public static class CollectionEndpoints
 
     private static async Task<ProductDto> MapProductToDtoAsync(Product product, CatalogDbContext db)
     {
-        var skus = await db.ProductSkus
+        var skus = (await db.ProductSkus
             .AsNoTracking()
             .Where(s => s.ProductId == product.Id && s.IsActive)
+            .ToListAsync())
             .OrderBy(s => string.Join(",", s.VariantValues.Values))
-            .ToListAsync();
+            .ToList();
 
         return new ProductDto
         {

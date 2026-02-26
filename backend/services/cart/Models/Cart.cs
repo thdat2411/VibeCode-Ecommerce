@@ -27,6 +27,12 @@ public record CartItem
 
     [JsonPropertyName("image")]
     public string Image { get; set; } = string.Empty;
+
+    [JsonPropertyName("size")]
+    public string? Size { get; set; }
+
+    [JsonPropertyName("color")]
+    public string? Color { get; set; }
 }
 
 public record AddToCartRequest
@@ -34,6 +40,21 @@ public record AddToCartRequest
     public string ProductId { get; init; } = string.Empty;
     public string Name { get; init; } = string.Empty;
     public decimal Price { get; init; }
-    public int Quantity { get; init; }
+    public int Quantity { get; init; } = 1;
     public string Image { get; init; } = string.Empty;
+    public string? Size { get; init; }
+    public string? Color { get; init; }
+}
+
+public record RemoveFromCartRequest
+{
+    public string? Size { get; init; }
+    public string? Color { get; init; }
+}
+
+public record UpdateQuantityRequest
+{
+    public int Quantity { get; init; }
+    public string? Size { get; init; }
+    public string? Color { get; init; }
 }

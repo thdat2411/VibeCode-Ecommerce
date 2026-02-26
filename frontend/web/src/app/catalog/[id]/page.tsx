@@ -146,8 +146,8 @@ export default function ProductPage({
           <div className="lg:sticky lg:top-24 lg:h-fit">
             {/* Header Section */}
             <div className="mb-6">
-              <p className="text-xs text-gray-600 mb-2">
-                {product.category || "Product"}
+              <p className="text-xs text-gray-600 mb-2 uppercase tracking-widest">
+                {product.collectionSlug?.replace(/-/g, " ") || "Product"}
               </p>
               <h1 className="text-lg lg:text-xl  mb-4">
                 {(product.name || "Untitled Product").toUpperCase()}
@@ -192,7 +192,10 @@ export default function ProductPage({
             <div className="mt-6">
               <AddToCartForm
                 product={{
-                  ...product,
+                  id: product.id,
+                  name: product.name,
+                  price: product.price,
+                  totalStock: product.totalStock ?? 0,
                   images: selectedColorImages,
                 }}
                 sizes={sizes}

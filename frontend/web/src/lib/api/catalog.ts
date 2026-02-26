@@ -1,5 +1,4 @@
 import axios, { AxiosError } from 'axios';
-import { getUserId } from './auth';
 
 const BFF_URL = process.env.NEXT_PUBLIC_BFF_URL || 'http://localhost:5000';
 
@@ -16,8 +15,10 @@ export interface Collection {
     name: string;
     slug: string;
     description: string;
+    image: string;
+    parentId: string | null;
     displayOrder: number;
-    createdAt: string;
+    subCollections: Collection[];
 }
 
 export interface VariantOption {
@@ -31,18 +32,27 @@ export interface VariantImage {
     images: string[];
 }
 
+export interface ProductSku {
+    id: string;
+    skuCode: string;
+    variantValues: Record<string, string>;
+    stock: number;
+    priceOverride: number | null;
+}
+
 export interface Product {
     id: string;
     name: string;
     description: string;
     price: number;
+    compareAtPrice: number | null;
     collectionId: string;
     collectionSlug: string;
-    category: string;
     thumbnailImage: string;
     variantOptions: VariantOption[];
     variantImages: VariantImage[];
-    stock: number;
+    skus: ProductSku[];
+    totalStock: number;
     createdAt: string;
 }
 

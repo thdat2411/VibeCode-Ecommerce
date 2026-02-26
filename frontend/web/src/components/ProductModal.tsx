@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
-import { ShoppingCart } from "lucide-react";
 import { Product } from "@/lib/api/catalog";
+import { useCart } from "@/lib/cart-context";
+import AddToCartConfirmModal from "@/components/AddToCartConfirmModal";
 
 interface ProductModalProps {
   isOpen: boolean;
@@ -46,13 +47,12 @@ export default function ProductModal({
     [];
   const displayName = product?.name || propName || "";
   const displayBrand = propBrand || "THE NEW ORIGINALS";
-  const displayPrice = propPrice || product?.price || 0;
+  const displayPrice = product?.price ?? propPrice ?? 0;
   const displayCompareAtPrice =
-    propCompareAtPrice ||
-    (product?.price && product.price > 500000 ? product.price : undefined);
+    product?.compareAtPrice ?? propCompareAtPrice ?? undefined;
   const displayIsOnSale =
-    propIsOnSale ||
-    (displayPrice > 500000 && displayCompareAtPrice !== undefined);
+    propIsOnSale ??
+    (displayCompareAtPrice != null && displayCompareAtPrice > displayPrice);
   const displaySaleLabel = propSaleLabel || "ĐANG GIẢM GIÁ";
   const displayImage = propImage || product?.thumbnailImage || "";
   const displayImage2 = propImage2;
@@ -63,6 +63,12 @@ export default function ProductModal({
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isHovering, setIsHovering] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
+  const [addLoading, setAddLoading] = useState(false);
+  const [addSuccess, setAddSuccess] = useState(false);
+  const [addError, setAddError] = useState<string | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
+  const { addItem } = useCart();
 
   // Get images for selected color
   const getColorImages = (color: string) => {
@@ -85,13 +91,9 @@ export default function ProductModal({
   const images = getColorImages(selectedColor);
   const displayImageUrl = images[selectedImageIndex] || displayImage;
 
-  const hasDiscount = displayPrice > 500000;
-  const discountPrice = hasDiscount ? displayPrice * 0.5 : displayPrice;
-  const finalPrice = hasDiscount ? discountPrice : displayPrice;
-  const finalCompareAtPrice = hasDiscount
-    ? displayPrice
-    : displayCompareAtPrice;
-  const finalIsOnSale = hasDiscount || displayIsOnSale;
+  const finalPrice = displayPrice;
+  const finalCompareAtPrice = displayCompareAtPrice;
+  const finalIsOnSale = displayIsOnSale;
 
   // Reset image index when color changes
   useEffect(() => {
@@ -105,15 +107,37 @@ export default function ProductModal({
     return null;
   }
 
-  const handleAddToCart = () => {
-    // TODO: Add to cart logic
-    console.log({
-      productId: product?.id || id,
-      color: selectedColor,
-      size: selectedSize,
-      quantity,
-    });
-    onClose();
+  const handleAddToCart = async () => {
+    const productId = product?.id || id || "";
+    const name = displayName;
+    const price = finalPrice;
+    const image = displayImageUrl || displayImage;
+
+    if (!productId) return;
+
+    try {
+      setAddLoading(true);
+      setAddError(null);
+      setAddSuccess(false);
+      await addItem({
+        productId,
+        name,
+        price,
+        image,
+        quantity,
+        size: selectedSize || undefined,
+        color: selectedColor || undefined,
+      });
+      setAddSuccess(true);
+      setConfirmOpen(true);
+      setTimeout(() => setAddSuccess(false), 2000);
+    } catch (err) {
+      setAddError(
+        err instanceof Error ? err.message : "Không thể thêm vào giỏ hàng",
+      );
+    } finally {
+      setAddLoading(false);
+    }
   };
 
   const handleClose = () => {
@@ -126,6 +150,28 @@ export default function ProductModal({
 
   return (
     <>
+      <AddToCartConfirmModal
+        isOpen={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        onOpenCart={() => {
+          setConfirmOpen(false);
+          onClose();
+        }}
+        item={
+          confirmOpen
+            ? {
+                name: displayName,
+                color: selectedColor,
+                size: selectedSize,
+                price: finalPrice,
+                image: displayImageUrl || displayImage,
+                quantity,
+              }
+            : null
+        }
+        excludeProductId={product?.id || id}
+      />
+
       {/* Backdrop */}
       <div
         className={`fixed inset-0 bg-black/50 z-40 ${
@@ -141,9 +187,10 @@ export default function ProductModal({
         className={`fixed inset-0 z-50 flex items-center justify-center p-4 w-full h-full ${
           isClosing ? "pointer-events-none" : ""
         }`}
+        onClick={handleClose}
       >
         <div
-          className={`relative bg-white rounded-lg shadow-xl lg:w-[65%] lg:h-fit h-full overflow-y-auto ${
+          className={`relative bg-white rounded-lg shadow-xl lg:max-w-[65%] w-[80%] lg:h-fit h-[80%] overflow-y-auto ${
             isClosing
               ? "animate-[modalScaleOut_0.3s_ease-in_forwards]"
               : "animate-[modalScaleIn_0.3s_ease-out_forwards]"
@@ -236,33 +283,39 @@ export default function ProductModal({
                 <p className="text-xs text-gray-500 uppercase mb-1 md:mb-2 tracking-widest">
                   {displayBrand}
                 </p>
-                <h2 className="text-base md:text-xl lg:text-2xl  text-black uppercase mb-1 md:mb-2">
+                <h2 className="text-sm md:text-base lg:text-lg text-black uppercase mb-1 md:mb-2">
                   {displayName}
                 </h2>
               </div>
 
-              {/* Price */}
-              <div className="flex items-center gap-2 md:gap-3">
-                <span className="text-base md:text-lg lg:text-2xl  text-black">
-                  ₫{finalPrice.toLocaleString("vi-VN")}
-                </span>
-                {finalCompareAtPrice && (
-                  <span className="text-xs md:text-sm text-gray-400 line-through">
-                    ₫{finalCompareAtPrice.toLocaleString("vi-VN")}
-                  </span>
-                )}
-              </div>
+              <hr className="border-gray-200" />
 
-              {/* Sale Label */}
-              {finalIsOnSale && (
-                <p className="text-xs md:text-sm  text-red-600">
-                  {displaySaleLabel}
-                </p>
-              )}
+              {/* Price */}
+              <div>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <span
+                    className={`text-base md:text-lg font-medium ${
+                      finalIsOnSale ? "text-black" : "text-black"
+                    }`}
+                  >
+                    ₫{finalPrice.toLocaleString("vi-VN")}
+                  </span>
+                  {finalCompareAtPrice && (
+                    <span className="text-xs text-gray-400 line-through">
+                      ₫{finalCompareAtPrice.toLocaleString("vi-VN")}
+                    </span>
+                  )}
+                  {finalIsOnSale && (
+                    <span className="bg-red-600 text-white text-[10px] tracking-widest uppercase px-2 py-1">
+                      {displaySaleLabel}
+                    </span>
+                  )}
+                </div>
+              </div>
 
               {/* Color Selection with Thumbnails */}
               <div>
-                <label className="block text-xs md:text-sm text-black mb-2 md:mb-3 uppercase">
+                <label className="block text-[10px] md:text-xs text-black mb-2 md:mb-3 uppercase">
                   Màu sắc — {selectedColor}
                 </label>
                 <div className="flex gap-2 md:gap-3 flex-wrap">
@@ -294,15 +347,15 @@ export default function ProductModal({
 
               {/* Size Selection */}
               <div>
-                <label className="block text-xs md:text-sm  text-black mb-2 md:mb-3 uppercase">
-                  Cỡ - XS
+                <label className="block text-[10px] md:text-xs text-black mb-2 md:mb-3 uppercase">
+                  CỠ — {selectedSize}
                 </label>
-                <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+                <div className="grid grid-cols-2 gap-2">
                   {sizes.map((size) => (
                     <button
                       key={size}
                       onClick={() => setSelectedSize(size)}
-                      className={`py-1 md:py-2 px-1 border-2 rounded text-xs md:text-sm font-medium transition ${
+                      className={`py-2.5 border text-[10px] md:text-xs font-medium tracking-widest uppercase transition ${
                         selectedSize === size
                           ? "border-black bg-black text-white"
                           : "border-gray-300 text-black hover:border-black"
@@ -316,48 +369,63 @@ export default function ProductModal({
 
               {/* Quantity Selection */}
               <div>
-                <label className="block text-xs md:text-sm  text-black mb-2 md:mb-3 uppercase">
-                  Số lượng
-                </label>
-                <div className="flex items-center border border-black w-fit rounded">
+                <label className="block text-[10px] md:text-xs text-black mb-2 md:mb-3 uppercase"></label>
+                <div className="flex items-center border border-black w-fit">
                   <button
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="px-3 md:px-4 py-1 md:py-2 hover:bg-gray-100 text-black transition text-base md:text-lg"
+                    className="w-12 h-10 flex items-center justify-center hover:bg-gray-100 text-black transition text-lg"
                   >
                     −
                   </button>
-                  <span className="px-4 md:px-6 py-1 md:py-2  text-black text-sm md:text-base">
+                  <span className="w-24 h-10 flex items-center justify-center text-black text-sm border-x border-black">
                     {quantity}
                   </span>
                   <button
                     onClick={() => setQuantity(quantity + 1)}
-                    className="px-3 md:px-4 py-1 md:py-2 hover:bg-gray-100 text-black transition text-base md:text-lg"
+                    className="w-12 h-10 flex items-center justify-center hover:bg-gray-100 text-black transition text-lg"
                   >
                     +
                   </button>
                 </div>
               </div>
 
+              {/* Error message */}
+              {addError && (
+                <p className="text-[10px] text-red-600 uppercase tracking-wide -mb-1">
+                  {addError}
+                </p>
+              )}
+
               {/* Action Buttons */}
-              <div className="flex flex-col md:flex-row gap-2 md:gap-3 pt-4">
+              <div className="flex flex-col gap-3 pt-2">
                 <button
                   onClick={handleAddToCart}
-                  className="flex-1 bg-black text-white px-4 md:px-6 py-2 md:py-3 rounded  hover:bg-gray-800 transition flex items-center justify-center gap-2 uppercase text-xs md:text-sm"
+                  disabled={addLoading}
+                  className={`w-full py-3 text-[10px] tracking-widest uppercase transition ${
+                    addSuccess
+                      ? "bg-green-600 text-white"
+                      : addLoading
+                        ? "bg-gray-400 text-white cursor-not-allowed"
+                        : "bg-black text-white hover:bg-gray-800"
+                  }`}
                 >
-                  <ShoppingCart size={16} />
-                  Thêm vào giỏ hàng
+                  {addLoading
+                    ? "ĐANG THÊM..."
+                    : addSuccess
+                      ? "✓ ĐÃ THÊM VÀO GIỎ"
+                      : "THÊM VÀO GIỎ HÀNG"}
                 </button>
                 <button
                   onClick={onClose}
-                  className="px-4 md:px-6 py-2 md:py-3 border-2 border-black text-black rounded  hover:bg-black hover:text-white transition uppercase text-xs md:text-sm"
+                  className="w-full border border-black text-black py-3 text-[10px] tracking-widest uppercase hover:bg-black hover:text-white transition"
                 >
-                  Đóng
+                  MUA NGAY
                 </button>
               </div>
 
               {/* Additional Info */}
               <div className="pt-3 md:pt-4 border-t border-gray-300">
-                <p className="text-xs text-gray-500">
+                <p className="text-[10px] text-gray-500">
                   Sản phẩm sẽ được giao trong vòng 3-5 ngày làm việc
                 </p>
               </div>

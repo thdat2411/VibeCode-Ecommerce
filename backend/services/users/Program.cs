@@ -1,7 +1,9 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using MongoDB.Driver;
+using Npgsql;
+using Users.Data;
 using Users.Repositories;
 using Users.Services;
 using Users.Endpoints;
@@ -14,18 +16,16 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// MongoDB configuration
-builder.Services.AddSingleton<IMongoClient>(sp =>
-{
-    var connectionString = builder.Configuration["MongoDB:ConnectionString"];
-    return new MongoClient(connectionString);
-});
+// PostgreSQL / Supabase configuration (mirrors catalog service pattern)
+var connectionString = builder.Configuration["Supabase:ConnectionString"]
+    ?? throw new InvalidOperationException("Supabase:ConnectionString is not configured in appsettings.json");
 
-builder.Services.AddScoped(sp =>
+var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
+var dataSource = dataSourceBuilder.Build();
+
+builder.Services.AddDbContext<UsersDbContext>(options =>
 {
-    var client = sp.GetRequiredService<IMongoClient>();
-    var databaseName = builder.Configuration["MongoDB:DatabaseName"];
-    return client.GetDatabase(databaseName);
+    options.UseNpgsql(dataSource);
 });
 
 // JWT Authentication
@@ -79,5 +79,12 @@ app.UseGlobalExceptionHandler();
 app.MapUserEndpoints();
 app.MapAuthEndpoints(app.Configuration, new HttpClient());
 app.MapAddressEndpoints();
+
+// Apply EF Core migrations / ensure DB schema is up to date
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<UsersDbContext>();
+    await db.Database.MigrateAsync();
+}
 
 app.Run();

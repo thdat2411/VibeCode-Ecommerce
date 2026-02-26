@@ -1,50 +1,25 @@
-import { getProducts } from "@/lib/api/catalog";
-import Link from "next/link";
+import { getProducts, getCollections } from "@/lib/api/catalog";
 import { CatalogWrapper } from "@/components/CatalogWrapper";
 
 // Disable static generation since we're fetching from API
 export const dynamic = "force-dynamic";
 
 export default async function CatalogPage() {
-  const products = await getProducts();
+  const [products, collections] = await Promise.all([
+    getProducts().catch(() => []),
+    getCollections().catch(() => []),
+  ]);
 
   return (
-    <div className="min-h-screen">
-      <header className="border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex justify-between items-center">
-            <Link href="/" className="text-2xl font-bold">
-              The New Originals
-            </Link>
-            <nav className="space-x-6">
-              <Link href="/catalog" className="hover:underline font-semibold">
-                Shop
-              </Link>
-              <Link href="/cart" className="hover:underline">
-                Cart
-              </Link>
-              <Link href="/auth/signin" className="hover:underline">
-                Sign In
-              </Link>
-            </nav>
-          </div>
-        </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div className="min-h-screen bg-white" data-nav-theme="light">
+      <main className="max-w-7xl px-4 sm:px-6 sm:pt-[20%] lg:px-8 lg:ml-[25%] lg:mr-[10%] lg:pt-[10%]">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold">Shop All</h1>
-          <p className="text-gray-600 mt-2">Discover our collection</p>
+          <h1 className="text-xs font-bold tracking-widest uppercase text-black">
+            Tất cả sản phẩm ({products.length})
+          </h1>
         </div>
-
-        <CatalogWrapper products={products} />
+        <CatalogWrapper products={products} collections={collections} />
       </main>
-
-      <footer className="border-t mt-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-center text-gray-500">
-          <p>&copy; 2026 The New Originals. All rights reserved.</p>
-        </div>
-      </footer>
     </div>
   );
 }

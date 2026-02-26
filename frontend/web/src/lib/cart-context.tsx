@@ -14,8 +14,31 @@ import {
   removeFromCart,
   CartItem,
   CartResponse,
+  cartKey,
 } from "@/lib/api/cart";
 import { useAuth } from "./auth-context";
+
+const GUEST_CART_KEY = "guest_cart";
+
+function loadGuestCart(): CartItem[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(GUEST_CART_KEY);
+    return raw ? (JSON.parse(raw) as CartItem[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveGuestCart(items: CartItem[]) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(GUEST_CART_KEY, JSON.stringify(items));
+}
+
+function clearGuestCart() {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem(GUEST_CART_KEY);
+}
 
 interface CartContextType {
   items: CartItem[];
@@ -27,7 +50,13 @@ interface CartContextType {
   addItem: (
     item: Omit<CartItem, "quantity"> & { quantity?: number },
   ) => Promise<void>;
-  removeItem: (productId: string) => Promise<void>;
+  removeItem: (
+    item: Pick<CartItem, "productId" | "size" | "color">,
+  ) => Promise<void>;
+  updateQuantity: (
+    item: Pick<CartItem, "productId" | "size" | "color">,
+    quantity: number,
+  ) => Promise<void>;
   clearCart: () => void;
 }
 
@@ -40,9 +69,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const calcTotal = (list: CartItem[]) =>
+    list.reduce((sum, i) => sum + i.price * i.quantity, 0);
+
+  // ── Fetch backend cart (authenticated only) ──
   const fetchCart = useCallback(async () => {
     if (!authenticated) return;
-
     try {
       setLoading(true);
       setError(null);
@@ -50,68 +82,146 @@ export function CartProvider({ children }: { children: ReactNode }) {
       setItems(cart.items);
       setTotal(cart.total);
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to fetch cart";
-      setError(errorMessage);
+      setError(err instanceof Error ? err.message : "Failed to fetch cart");
     } finally {
       setLoading(false);
     }
   }, [authenticated]);
 
-  // Fetch cart when component mounts or authentication changes
+  // ── On login: merge guest cart into backend, then clear localStorage ──
   useEffect(() => {
-    if (authenticated) {
-      fetchCart();
+    if (!authenticated) {
+      // Load guest cart into state
+      const guest = loadGuestCart();
+      setItems(guest);
+      setTotal(calcTotal(guest));
+      return;
     }
-  }, [authenticated, fetchCart]);
 
+    const mergeAndFetch = async () => {
+      const guest = loadGuestCart();
+      if (guest.length > 0) {
+        try {
+          // Add each guest item to backend cart
+          for (const item of guest) {
+            await addToCart(item);
+          }
+        } catch {
+          // best-effort merge
+        } finally {
+          clearGuestCart();
+        }
+      }
+      await fetchCart();
+    };
+
+    mergeAndFetch();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authenticated]);
+
+  // ── Add item ──
   const addItem = useCallback(
     async (item: Omit<CartItem, "quantity"> & { quantity?: number }) => {
+      const qty = item.quantity ?? 1;
+
       if (!authenticated) {
-        setError("Please log in to add items to cart");
+        // Guest: update localStorage
+        const current = loadGuestCart();
+        const key = cartKey({ ...item });
+        const existing = current.find((i) => cartKey(i) === key);
+        let updated: CartItem[];
+        if (existing) {
+          updated = current.map((i) =>
+            cartKey(i) === key ? { ...i, quantity: i.quantity + qty } : i,
+          );
+        } else {
+          updated = [...current, { ...item, quantity: qty }];
+        }
+        saveGuestCart(updated);
+        setItems(updated);
+        setTotal(calcTotal(updated));
         return;
       }
 
+      // Authenticated: hit backend
       try {
         setError(null);
-        await addToCart(item);
-        // Refresh cart after adding
+        await addToCart({ ...item, quantity: qty });
         await fetchCart();
       } catch (err) {
-        const errorMessage =
+        const msg =
           err instanceof Error ? err.message : "Failed to add item to cart";
-        setError(errorMessage);
+        setError(msg);
         throw err;
       }
     },
     [authenticated, fetchCart],
   );
 
+  // ── Remove item ──
   const removeItem = useCallback(
-    async (productId: string) => {
+    async (item: Pick<CartItem, "productId" | "size" | "color">) => {
+      const key = cartKey(item);
       if (!authenticated) {
-        setError("Please log in to remove items from cart");
+        const updated = loadGuestCart().filter((i) => cartKey(i) !== key);
+        saveGuestCart(updated);
+        setItems(updated);
+        setTotal(calcTotal(updated));
         return;
       }
 
       try {
         setError(null);
-        await removeFromCart(productId);
-        // Refresh cart after removing
+        await removeFromCart(item);
         await fetchCart();
       } catch (err) {
-        const errorMessage =
+        const msg =
           err instanceof Error
             ? err.message
             : "Failed to remove item from cart";
-        setError(errorMessage);
+        setError(msg);
         throw err;
       }
     },
     [authenticated, fetchCart],
   );
 
+  // ── Update quantity ──
+  const updateQuantity = useCallback(
+    async (
+      item: Pick<CartItem, "productId" | "size" | "color">,
+      quantity: number,
+    ) => {
+      if (quantity < 1) return;
+      const key = cartKey(item);
+
+      if (!authenticated) {
+        const updated = loadGuestCart().map((i) =>
+          cartKey(i) === key ? { ...i, quantity } : i,
+        );
+        saveGuestCart(updated);
+        setItems(updated);
+        setTotal(calcTotal(updated));
+        return;
+      }
+
+      try {
+        setError(null);
+        const existing = items.find((i) => cartKey(i) === key);
+        if (!existing) return;
+        await addToCart({ ...existing, quantity });
+        await fetchCart();
+      } catch (err) {
+        const msg =
+          err instanceof Error ? err.message : "Failed to update quantity";
+        setError(msg);
+      }
+    },
+    [authenticated, fetchCart, items],
+  );
+
   const clearCart = useCallback(() => {
+    clearGuestCart();
     setItems([]);
     setTotal(0);
     setError(null);
@@ -130,6 +240,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         fetchCart,
         addItem,
         removeItem,
+        updateQuantity,
         clearCart,
       }}
     >

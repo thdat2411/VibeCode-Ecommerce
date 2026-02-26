@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import { Product } from "@/lib/api/catalog";
+import { useState, useCallback, useMemo } from "react";
+import { Product, Collection } from "@/lib/api/catalog";
 import { CatalogFilters } from "./CatalogFilters";
 import { CatalogResults } from "./CatalogResults";
 
 interface CatalogWrapperProps {
   products: Product[];
+  collections: Collection[];
 }
 
 // Normalize products to ensure all required fields are present
@@ -23,24 +24,29 @@ function normalizeProducts(products: Product[]): Product[] {
     }));
 }
 
-export function CatalogWrapper({ products: rawProducts }: CatalogWrapperProps) {
-  const products = normalizeProducts(rawProducts);
-
-  // Debug logging
-  if (typeof window !== "undefined") {
-    console.log("CatalogWrapper received rawProducts:", rawProducts);
-    console.log("CatalogWrapper normalized products:", products);
-  }
+export function CatalogWrapper({
+  products: rawProducts,
+  collections,
+}: CatalogWrapperProps) {
+  const products = useMemo(() => normalizeProducts(rawProducts), [rawProducts]);
 
   const [filteredProducts, setFilteredProducts] = useState<Product[]>(products);
 
+  const handleFilter = useCallback((filtered: Product[]) => {
+    setFilteredProducts(filtered);
+  }, []);
+
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+    <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 text-black">
       {/* Sidebar Filters */}
       <div className="lg:col-span-1">
         <div className="sticky top-20">
           <h2 className="text-xl font-bold mb-6">Filters</h2>
-          <CatalogFilters products={products} onFilter={setFilteredProducts} />
+          <CatalogFilters
+            products={products}
+            collections={collections}
+            onFilter={handleFilter}
+          />
         </div>
       </div>
 

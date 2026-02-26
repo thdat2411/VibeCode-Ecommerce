@@ -9,7 +9,7 @@ export interface Product {
   id: string;
   name: string;
   price: number;
-  stock: number;
+  totalStock: number;
   images: string[];
 }
 
@@ -112,7 +112,7 @@ export function AddToCartForm({ product, sizes, colors }: AddToCartFormProps) {
             type="button"
             onClick={() => setQuantity(quantity + 1)}
             className="px-2 py-1 hover:bg-gray-100 transition text-base"
-            disabled={quantity >= product.stock}
+            disabled={quantity >= product.totalStock}
           >
             +
           </button>
@@ -122,11 +122,11 @@ export function AddToCartForm({ product, sizes, colors }: AddToCartFormProps) {
       {/* Add to Cart Button */}
       <button
         type="submit"
-        disabled={loading || product.stock === 0}
+        disabled={loading || product.totalStock === 0}
         className={`w-full py-4 rounded font-semibold transition ${
           success
             ? "bg-green-600 text-white"
-            : product.stock === 0
+            : product.totalStock === 0
               ? "bg-gray-300 text-gray-500 cursor-not-allowed"
               : "bg-black text-white hover:bg-gray-800"
         }`}
@@ -135,14 +135,16 @@ export function AddToCartForm({ product, sizes, colors }: AddToCartFormProps) {
           ? "Adding to cart..."
           : success
             ? "✓ Added to cart!"
-            : product.stock === 0
+            : product.totalStock === 0
               ? "Out of stock"
               : "Add to Cart"}
       </button>
 
       {/* Stock Info */}
       <p className="text-xs text-gray-500">
-        {product.stock > 0 ? `${product.stock} in stock` : "Out of stock"}
+        {product.totalStock > 0
+          ? `${product.totalStock} in stock`
+          : "Out of stock"}
       </p>
     </form>
   );

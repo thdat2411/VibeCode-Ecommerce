@@ -241,13 +241,13 @@ export function CollectionWrapper({
   return (
     <div>
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-xs font-bold tracking-wide">
+      <div className="flex items-center justify-between mb-8 ">
+        <h1 className="text-base tracking-wide text-black">
           {categoryName} ({sortedProducts.length})
         </h1>
         <button
           onClick={handleOpenFilters}
-          className="flex items-center gap-2 px-4 py-2 border border-gray-300 hover:border-black transition text-xs font-medium"
+          className="flex items-center gap-2 px-4 py-2 border border-gray-300 hover:border-black text-black transition text-xs font-medium"
         >
           <SlidersHorizontal size={18} />
           <span>LỌC VÀ SẮP XẾP</span>

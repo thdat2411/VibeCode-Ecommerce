@@ -10,7 +10,7 @@ public interface ICartRepository
 {
     Task<CartResponse> GetCartAsync(string userId);
     Task<CartResponse> AddItemAsync(string userId, CartItem item);
-    Task<CartResponse> RemoveItemAsync(string userId, string productId);
+    Task<CartResponse> RemoveItemAsync(string userId, string productId, string? size, string? color);
     Task<bool> ClearCartAsync(string userId);
     Task UpdateCartTotalAsync(string userId, CartResponse cart);
 }

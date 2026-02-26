@@ -168,7 +168,7 @@ export default function HomePage() {
 
         {/* Trending Products Section */}
         <section className="py-16 lg:pb-10" data-nav-theme="light">
-          <div className="max-w-7xl px-4 sm:px-6 lg:px-8 lg:ml-[25%]  lg:mr-[10%]">
+          <div className="max-w-7xl px-4 sm:px-6 lg:px-8 lg:ml-[25%] lg:mr-[10%]">
             {/* Featured Area */}
             <div className="grid grid-cols-1 lg:grid-cols-2 md:grid-cols-2 md:gap-12 gap-8 lg:gap-12 mb-16">
               <div className="flex flex-col justify-center">

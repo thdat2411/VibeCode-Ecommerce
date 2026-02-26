@@ -176,9 +176,11 @@ function ProductCard({
   const images = getImages();
   const displayImage = isHovering && images.length > 1 ? images[1] : images[0];
 
-  // Calculate discount
-  const hasDiscount = product.price > 500000;
-  const discountPrice = hasDiscount ? product.price * 0.5 : product.price;
+  // Use compareAtPrice from the product (real data from backend)
+  const hasDiscount =
+    product.compareAtPrice != null && product.compareAtPrice > product.price;
+  const discountPrice = product.price;
+  const originalPrice = product.compareAtPrice ?? product.price;
 
   const handleColorClick = (e: React.MouseEvent, color: string) => {
     e.preventDefault();
@@ -220,7 +222,7 @@ function ProductCard({
                 e.stopPropagation();
                 setIsModalOpen(true);
               }}
-              className="bg-white text-black px-3 py-2 rounded text-xs hover:bg-gray-100 transition flex items-center justify-center space-x-1 transform transition-transform duration-300 hover:scale-105"
+              className="bg-white text-black px-3 py-2 rounded text-xs hover:bg-gray-100 flex items-center justify-center space-x-1 transition-transform duration-300 hover:scale-105"
             >
               <Eye size={14} />
             </button>
@@ -230,7 +232,7 @@ function ProductCard({
                 e.stopPropagation();
                 setIsModalOpen(true);
               }}
-              className="bg-black text-white px-3 py-2 rounded text-xs hover:bg-gray-800 transition flex items-center justify-center space-x-1 transform transition-transform duration-300 hover:scale-105"
+              className="bg-black text-white px-3 py-2 rounded text-xs hover:bg-gray-800 flex items-center justify-center space-x-1 transition-transform duration-300 hover:scale-105"
             >
               <ShoppingCart size={14} />
             </button>
@@ -258,7 +260,7 @@ function ProductCard({
                     ₫{discountPrice.toLocaleString("vi-VN")}
                   </span>
                   <span className="text-[10px] text-red-600 line-through">
-                    ₫{product.price.toLocaleString("vi-VN")}
+                    ₫{originalPrice.toLocaleString("vi-VN")}
                   </span>
                 </>
               ) : (

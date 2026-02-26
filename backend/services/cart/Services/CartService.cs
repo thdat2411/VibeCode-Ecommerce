@@ -29,14 +29,41 @@ public class CartService
         return await _repository.AddItemAsync(userId, item);
     }
 
-    public async Task<CartResponse> RemoveFromCartAsync(string userId, string productId)
+    public async Task<CartResponse> RemoveFromCartAsync(string userId, string productId, string? size, string? color)
     {
         ValidateUserId(userId);
 
         if (string.IsNullOrWhiteSpace(productId))
             throw new ValidationException("Product ID cannot be empty.");
 
-        return await _repository.RemoveItemAsync(userId, productId);
+        return await _repository.RemoveItemAsync(userId, productId, size, color);
+    }
+
+    public async Task<CartResponse> UpdateQuantityAsync(string userId, string productId, string? size, string? color, int quantity)
+    {
+        ValidateUserId(userId);
+
+        if (string.IsNullOrWhiteSpace(productId))
+            throw new ValidationException("Product ID cannot be empty.");
+
+        if (quantity < 0)
+            throw new ValidationException("Quantity cannot be negative.");
+
+        var cart = await _repository.GetCartAsync(userId);
+        var items = cart.Items.ToList();
+        var key = $"{productId}|{size ?? ""}|{color ?? ""}";
+        var existingItem = items.FirstOrDefault(i => $"{i.ProductId}|{i.Size ?? ""}|{i.Color ?? ""}" == key);
+
+        if (existingItem == null)
+            throw new ValidationException("Item not found in cart.");
+
+        items.Remove(existingItem);
+        if (quantity > 0)
+            items.Add(existingItem with { Quantity = quantity });
+
+        cart = cart with { Items = items };
+        await _repository.UpdateCartTotalAsync(userId, cart);
+        return cart;
     }
 
     public async Task<bool> ClearCartAsync(string userId)

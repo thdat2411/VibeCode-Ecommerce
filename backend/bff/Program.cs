@@ -160,22 +160,80 @@ app.MapGet("/api/catalog/collections/{slug}/products", async (string slug, IHttp
 .WithName("GetCollectionProducts")
 .WithOpenApi();
 
-app.MapGet("/api/cart", async (IHttpClientFactory clientFactory) =>
+app.MapGet("/api/cart", async (HttpContext context, IHttpClientFactory clientFactory) =>
 {
+    var userId = context.Request.Headers["X-User-Id"].FirstOrDefault();
+    if (string.IsNullOrEmpty(userId)) return Results.Unauthorized();
     var client = clientFactory.CreateClient("CartService");
-    var response = await client.GetAsync("/api/cart");
-    return Results.Ok(await response.Content.ReadAsStringAsync());
+    var request = new HttpRequestMessage(HttpMethod.Get, "/api/cart");
+    request.Headers.Add("X-User-Id", userId);
+    var response = await client.SendAsync(request);
+    var content = await response.Content.ReadAsStringAsync();
+    return Results.Content(content, "application/json", statusCode: (int)response.StatusCode);
 })
 .WithName("GetCart")
 .WithOpenApi();
 
-app.MapPost("/api/cart/items", async (IHttpClientFactory clientFactory) =>
+app.MapPost("/api/cart/items", async (HttpContext context, IHttpClientFactory clientFactory) =>
 {
+    var userId = context.Request.Headers["X-User-Id"].FirstOrDefault();
+    if (string.IsNullOrEmpty(userId)) return Results.Unauthorized();
+    var body = await ReadBodyAsync(context.Request);
     var client = clientFactory.CreateClient("CartService");
-    var response = await client.PostAsync("/api/cart/items", null);
-    return Results.Ok(await response.Content.ReadAsStringAsync());
+    var request = new HttpRequestMessage(HttpMethod.Post, "/api/cart/items");
+    request.Headers.Add("X-User-Id", userId);
+    request.Content = new StringContent(body, System.Text.Encoding.UTF8, "application/json");
+    var response = await client.SendAsync(request);
+    var content = await response.Content.ReadAsStringAsync();
+    return Results.Content(content, "application/json", statusCode: (int)response.StatusCode);
 })
 .WithName("AddToCart")
+.WithOpenApi();
+
+app.MapDelete("/api/cart/items/{productId}", async (string productId, HttpContext context, IHttpClientFactory clientFactory) =>
+{
+    var userId = context.Request.Headers["X-User-Id"].FirstOrDefault();
+    if (string.IsNullOrEmpty(userId)) return Results.Unauthorized();
+    var body = await ReadBodyAsync(context.Request);
+    var client = clientFactory.CreateClient("CartService");
+    var request = new HttpRequestMessage(HttpMethod.Delete, $"/api/cart/items/{productId}");
+    request.Headers.Add("X-User-Id", userId);
+    if (!string.IsNullOrWhiteSpace(body))
+        request.Content = new StringContent(body, System.Text.Encoding.UTF8, "application/json");
+    var response = await client.SendAsync(request);
+    var content = await response.Content.ReadAsStringAsync();
+    return Results.Content(content, "application/json", statusCode: (int)response.StatusCode);
+})
+.WithName("RemoveFromCart")
+.WithOpenApi();
+
+app.MapPatch("/api/cart/items/{productId}", async (string productId, HttpContext context, IHttpClientFactory clientFactory) =>
+{
+    var userId = context.Request.Headers["X-User-Id"].FirstOrDefault();
+    if (string.IsNullOrEmpty(userId)) return Results.Unauthorized();
+    var body = await ReadBodyAsync(context.Request);
+    var client = clientFactory.CreateClient("CartService");
+    var request = new HttpRequestMessage(HttpMethod.Patch, $"/api/cart/items/{productId}");
+    request.Headers.Add("X-User-Id", userId);
+    request.Content = new StringContent(body, System.Text.Encoding.UTF8, "application/json");
+    var response = await client.SendAsync(request);
+    var content = await response.Content.ReadAsStringAsync();
+    return Results.Content(content, "application/json", statusCode: (int)response.StatusCode);
+})
+.WithName("UpdateCartItemQuantity")
+.WithOpenApi();
+
+app.MapDelete("/api/cart", async (HttpContext context, IHttpClientFactory clientFactory) =>
+{
+    var userId = context.Request.Headers["X-User-Id"].FirstOrDefault();
+    if (string.IsNullOrEmpty(userId)) return Results.Unauthorized();
+    var client = clientFactory.CreateClient("CartService");
+    var request = new HttpRequestMessage(HttpMethod.Delete, "/api/cart");
+    request.Headers.Add("X-User-Id", userId);
+    var response = await client.SendAsync(request);
+    return response.IsSuccessStatusCode ? Results.Ok() : Results.Problem("Failed to clear cart.");
+})
+.WithName("ClearCart")
 .WithOpenApi();
 
 app.MapGet("/api/orders", async (IHttpClientFactory clientFactory) =>

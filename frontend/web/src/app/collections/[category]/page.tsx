@@ -22,10 +22,9 @@ export default async function CollectionPage({
   const sortBy = sort || "default";
 
   try {
-    // Fetch collection and its products
     const { collection, products } = await getCollectionProducts(category);
 
-    if (!collection || products.length === 0) {
+    if (!collection) {
       notFound();
     }
 
@@ -48,5 +47,4 @@ export default async function CollectionPage({
   }
 }
 
-// Disable static generation for collection pages since we're fetching from API
 export const dynamic = "force-dynamic";
