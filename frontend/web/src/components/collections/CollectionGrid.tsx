@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { ShoppingCart, Eye } from "lucide-react";
-import ProductModal from "./ProductModal";
+import ProductModal from "@/components/product/ProductModal";
 
 interface CollectionGridProps {
   products: Product[];

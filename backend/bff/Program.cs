@@ -236,6 +236,89 @@ app.MapDelete("/api/cart", async (HttpContext context, IHttpClientFactory client
 .WithName("ClearCart")
 .WithOpenApi();
 
+// ── Guest cart routes ────────────────────────────────────────────────────────
+
+// POST /api/cart/guest — create guest cart with first item, returns { cartId, cart }
+app.MapPost("/api/cart/guest", async (HttpContext context, IHttpClientFactory clientFactory) =>
+{
+    var body = await ReadBodyAsync(context.Request);
+    var client = clientFactory.CreateClient("CartService");
+    var request = new HttpRequestMessage(HttpMethod.Post, "/api/cart/guest");
+    request.Content = new StringContent(body, System.Text.Encoding.UTF8, "application/json");
+    var response = await client.SendAsync(request);
+    var content = await response.Content.ReadAsStringAsync();
+    return Results.Content(content, "application/json", statusCode: (int)response.StatusCode);
+})
+.WithName("CreateGuestCart")
+.WithOpenApi();
+
+// GET /api/cart/guest/{cartId}
+app.MapGet("/api/cart/guest/{cartId}", async (string cartId, IHttpClientFactory clientFactory) =>
+{
+    var client = clientFactory.CreateClient("CartService");
+    var response = await client.GetAsync($"/api/cart/guest/{cartId}");
+    var content = await response.Content.ReadAsStringAsync();
+    return Results.Content(content, "application/json", statusCode: (int)response.StatusCode);
+})
+.WithName("GetGuestCart")
+.WithOpenApi();
+
+// POST /api/cart/guest/{cartId}/items
+app.MapPost("/api/cart/guest/{cartId}/items", async (string cartId, HttpContext context, IHttpClientFactory clientFactory) =>
+{
+    var body = await ReadBodyAsync(context.Request);
+    var client = clientFactory.CreateClient("CartService");
+    var request = new HttpRequestMessage(HttpMethod.Post, $"/api/cart/guest/{cartId}/items");
+    request.Content = new StringContent(body, System.Text.Encoding.UTF8, "application/json");
+    var response = await client.SendAsync(request);
+    var content = await response.Content.ReadAsStringAsync();
+    return Results.Content(content, "application/json", statusCode: (int)response.StatusCode);
+})
+.WithName("AddToGuestCart")
+.WithOpenApi();
+
+// DELETE /api/cart/guest/{cartId}/items/{productId}
+app.MapDelete("/api/cart/guest/{cartId}/items/{productId}", async (string cartId, string productId, HttpContext context, IHttpClientFactory clientFactory) =>
+{
+    var body = await ReadBodyAsync(context.Request);
+    var client = clientFactory.CreateClient("CartService");
+    var request = new HttpRequestMessage(HttpMethod.Delete, $"/api/cart/guest/{cartId}/items/{productId}");
+    if (!string.IsNullOrWhiteSpace(body))
+        request.Content = new StringContent(body, System.Text.Encoding.UTF8, "application/json");
+    var response = await client.SendAsync(request);
+    var content = await response.Content.ReadAsStringAsync();
+    return Results.Content(content, "application/json", statusCode: (int)response.StatusCode);
+})
+.WithName("RemoveFromGuestCart")
+.WithOpenApi();
+
+// DELETE /api/cart/guest/{cartId}
+app.MapDelete("/api/cart/guest/{cartId}", async (string cartId, IHttpClientFactory clientFactory) =>
+{
+    var client = clientFactory.CreateClient("CartService");
+    var response = await client.DeleteAsync($"/api/cart/guest/{cartId}");
+    return response.IsSuccessStatusCode ? Results.Ok() : Results.Problem("Failed to clear guest cart.");
+})
+.WithName("ClearGuestCart")
+.WithOpenApi();
+
+// POST /api/cart/merge — merge guest cart into user cart on login
+app.MapPost("/api/cart/merge", async (HttpContext context, IHttpClientFactory clientFactory) =>
+{
+    var userId = context.Request.Headers["X-User-Id"].FirstOrDefault();
+    if (string.IsNullOrEmpty(userId)) return Results.Unauthorized();
+    var body = await ReadBodyAsync(context.Request);
+    var client = clientFactory.CreateClient("CartService");
+    var request = new HttpRequestMessage(HttpMethod.Post, "/api/cart/merge");
+    request.Headers.Add("X-User-Id", userId);
+    request.Content = new StringContent(body, System.Text.Encoding.UTF8, "application/json");
+    var response = await client.SendAsync(request);
+    var content = await response.Content.ReadAsStringAsync();
+    return Results.Content(content, "application/json", statusCode: (int)response.StatusCode);
+})
+.WithName("MergeCart")
+.WithOpenApi();
+
 app.MapGet("/api/orders", async (IHttpClientFactory clientFactory) =>
 {
     var client = clientFactory.CreateClient("OrdersService");

@@ -58,3 +58,18 @@ public record UpdateQuantityRequest
     public string? Size { get; init; }
     public string? Color { get; init; }
 }
+
+public record CreateGuestCartResponse
+{
+    [JsonPropertyName("cartId")]
+    public string CartId { get; init; } = string.Empty;
+
+    [JsonPropertyName("cart")]
+    public CartResponse Cart { get; init; } = new();
+}
+
+public record MergeCartRequest
+{
+    /// <summary>Guest cart_id from cookie</summary>
+    public string CartId { get; init; } = string.Empty;
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { Product, Collection } from "@/lib/api/catalog";
 import { CatalogFilters } from "./CatalogFilters";
 import { CatalogResults } from "./CatalogResults";
@@ -29,6 +29,11 @@ export function CatalogWrapper({
   collections,
 }: CatalogWrapperProps) {
   const products = useMemo(() => normalizeProducts(rawProducts), [rawProducts]);
+
+  // Notify Header to re-sample nav theme once client content is mounted.
+  useEffect(() => {
+    window.dispatchEvent(new Event("dataLoadComplete"));
+  }, []);
 
   const [filteredProducts, setFilteredProducts] = useState<Product[]>(products);
 

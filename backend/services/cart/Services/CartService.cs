@@ -72,6 +72,58 @@ public class CartService
         return await _repository.ClearCartAsync(userId);
     }
 
+    // ── Guest cart ───────────────────────────────────────────────────────────
+
+    public async Task<(string CartId, CartResponse Cart)> CreateGuestCartAsync(CartItem firstItem)
+    {
+        ValidateCartItem(firstItem);
+        var cartId = Guid.NewGuid().ToString("N"); // compact 32-char hex
+        var cart = await _repository.AddGuestItemAsync(cartId, firstItem);
+        return (cartId, cart);
+    }
+
+    public async Task<CartResponse> GetGuestCartAsync(string cartId)
+    {
+        ValidateCartId(cartId);
+        return await _repository.GetGuestCartAsync(cartId);
+    }
+
+    public async Task<CartResponse> AddToGuestCartAsync(string cartId, CartItem item)
+    {
+        ValidateCartId(cartId);
+        ValidateCartItem(item);
+        return await _repository.AddGuestItemAsync(cartId, item);
+    }
+
+    public async Task<CartResponse> RemoveFromGuestCartAsync(string cartId, string productId, string? size, string? color)
+    {
+        ValidateCartId(cartId);
+        if (string.IsNullOrWhiteSpace(productId))
+            throw new ValidationException("Product ID cannot be empty.");
+        return await _repository.RemoveGuestItemAsync(cartId, productId, size, color);
+    }
+
+    public async Task<bool> ClearGuestCartAsync(string cartId)
+    {
+        ValidateCartId(cartId);
+        return await _repository.ClearGuestCartAsync(cartId);
+    }
+
+    // ── Merge guest → user (called on login) ────────────────────────────────
+
+    public async Task<CartResponse> MergeCartAsync(string cartId, string userId)
+    {
+        ValidateCartId(cartId);
+        ValidateUserId(userId);
+        return await _repository.MergeGuestCartAsync(cartId, userId);
+    }
+
+    private void ValidateCartId(string cartId)
+    {
+        if (string.IsNullOrWhiteSpace(cartId))
+            throw new ValidationException("Cart ID cannot be empty.");
+    }
+
     private void ValidateUserId(string userId)
     {
         if (string.IsNullOrWhiteSpace(userId))

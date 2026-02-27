@@ -1,5 +1,5 @@
 import { getCollectionProducts } from "@/lib/api/catalog";
-import { CollectionWrapper } from "@/components/CollectionWrapper";
+import { CollectionWrapper } from "@/components/collections/CollectionWrapper";
 import { notFound } from "next/navigation";
 
 interface CollectionPageProps {
@@ -34,6 +34,7 @@ export default async function CollectionPage({
           <CollectionWrapper
             category={category}
             categoryName={collection.name}
+            subCollections={collection.subCollections ?? []}
             products={products}
             currentPage={page}
             sortBy={sortBy}

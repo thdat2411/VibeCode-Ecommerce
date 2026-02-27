@@ -87,6 +87,7 @@ public static class CollectionEndpoints
         .WithSummary("Get collection by slug");
 
         // GET /api/collections/{slug}/products - Get products by collection slug
+        // Also returns products from all sub-collections (one level deep).
         group.MapGet("/{slug}/products", async (string slug, CatalogDbContext db) =>
         {
             var collection = await db.Collections
@@ -98,9 +99,21 @@ public static class CollectionEndpoints
                 return Results.NotFound(new { message = "Collection not found" });
             }
 
+            // Load direct sub-collections
+            var subCollections = await db.Collections
+                .AsNoTracking()
+                .Where(c => c.ParentId == collection.Id && c.IsActive)
+                .OrderBy(c => c.DisplayOrder)
+                .ToListAsync();
+
+            // Collect all collection IDs to fetch products for:
+            // the collection itself + all its sub-collections
+            var collectionIds = new List<string> { collection.Id };
+            collectionIds.AddRange(subCollections.Select(c => c.Id));
+
             var products = await db.Products
                 .AsNoTracking()
-                .Where(p => p.CollectionId == collection.Id && p.IsActive)
+                .Where(p => collectionIds.Contains(p.CollectionId) && p.IsActive)
                 .ToListAsync();
 
             var productDtos = new List<ProductDto>();
@@ -108,6 +121,18 @@ public static class CollectionEndpoints
             {
                 productDtos.Add(await MapProductToDtoAsync(product, db));
             }
+
+            var subCollectionDtos = subCollections.Select(c => new CollectionDto
+            {
+                Id = c.Id,
+                Name = c.Name,
+                Slug = c.Slug,
+                Description = c.Description,
+                Image = c.Image,
+                ParentId = c.ParentId,
+                DisplayOrder = c.DisplayOrder,
+                SubCollections = Array.Empty<CollectionDto>()
+            }).ToArray();
 
             return Results.Ok(new
             {
@@ -118,7 +143,8 @@ public static class CollectionEndpoints
                     Slug = collection.Slug,
                     Description = collection.Description,
                     Image = collection.Image,
-                    DisplayOrder = collection.DisplayOrder
+                    DisplayOrder = collection.DisplayOrder,
+                    SubCollections = subCollectionDtos
                 },
                 products = productDtos,
                 count = productDtos.Count
@@ -127,7 +153,7 @@ public static class CollectionEndpoints
         .Produces(200)
         .Produces(404)
         .WithName("GetCollectionWithProducts")
-        .WithSummary("Get collection with all its products");
+        .WithSummary("Get collection with all its products (including sub-collections)");
     }
 
     private static CollectionDto MapCollectionToDtoWithChildren(Collection collection, List<Collection> allCollections)

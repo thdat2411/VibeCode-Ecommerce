@@ -4,11 +4,11 @@ import { getProductById } from "@/lib/api/catalog";
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect, use } from "react";
-import { AddToCartForm } from "@/components/AddToCartForm";
-import { ImageGallery } from "@/components/ImageGallery";
-import { ColorSelector } from "@/components/ColorSelector";
-import { ProductHighlights } from "@/components/ProductHighlights";
-import { ProductDescription } from "@/components/ProductDescription";
+import { AddToCartForm } from "@/components/product/AddToCartForm";
+import { ImageGallery } from "@/components/product/ImageGallery";
+import { ColorSelector } from "@/components/product/ColorSelector";
+import { ProductHighlights } from "@/components/product/ProductHighlights";
+import { ProductDescription } from "@/components/product/ProductDescription";
 import { Heart, Share2, Facebook, Twitter } from "lucide-react";
 
 export default function ProductPage({
@@ -51,7 +51,10 @@ export default function ProductPage({
         console.error("Failed to fetch product:", err);
         setError(err.message || "Failed to load product");
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        setLoading(false);
+        window.dispatchEvent(new Event("dataLoadComplete"));
+      });
   }, [id]);
 
   // Update images when color changes

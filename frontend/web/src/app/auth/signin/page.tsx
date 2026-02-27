@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { login, setAuthToken } from "@/lib/api/auth";
-import { GoogleAccountSelector } from "@/components/GoogleAccountSelector";
+import { GoogleAccountSelector } from "@/components/auth/GoogleAccountSelector";
 
 export default function SignInPage() {
   const router = useRouter();
@@ -13,6 +13,10 @@ export default function SignInPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleSelectorOpen, setGoogleSelectorOpen] = useState(false);
+
+  useEffect(() => {
+    window.dispatchEvent(new Event("dataLoadComplete"));
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

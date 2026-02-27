@@ -39,9 +39,9 @@ export function useCartActions() {
     );
 
     const remove = useCallback(
-        async (productId: string) => {
+        async (productId: string, size?: string, color?: string) => {
             try {
-                await removeItem(productId);
+                await removeItem({ productId, size, color });
                 addToast("Item removed from cart", "success");
                 return true;
             } catch (error) {

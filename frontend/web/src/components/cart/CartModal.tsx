@@ -16,13 +16,12 @@ interface CartModalProps {
 }
 
 export default function CartModal({ isOpen, onClose }: CartModalProps) {
-  const { items, total, removeItem, updateQuantity } = useCart();
+  const { items, total, removeItem, updateQuantity, note, setNote } = useCart();
   const { authenticated } = useAuth();
   const [isClosing, setIsClosing] = useState(false);
   const [removingId, setRemovingId] = useState<string | null>(null);
   const [isHovering, setIsHovering] = useState(false);
   const [noteOpen, setNoteOpen] = useState(false);
-  const [note, setNote] = useState("");
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [relSlideIndex, setRelSlideIndex] = useState(0);
   const REL_VISIBLE = 2;
@@ -321,7 +320,7 @@ export default function CartModal({ isOpen, onClose }: CartModalProps) {
                     onChange={(e) => setNote(e.target.value)}
                     rows={4}
                     placeholder="THÊM GHI CHÚ Ở ĐÂY"
-                    className="w-full border border-gray-300 p-3 text-xs text-black uppercase tracking-wide resize-none focus:outline-none focus:border-black placeholder:text-gray-400 mb-3"
+                    className="w-full border border-gray-300 p-3 text-xs text-black tracking-wide resize-none focus:outline-none focus:border-black placeholder:text-gray-400 mb-3"
                   />
                 </div>
               </div>

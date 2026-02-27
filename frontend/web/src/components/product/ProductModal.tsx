@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { Product } from "@/lib/api/catalog";
 import { useCart } from "@/lib/cart-context";
-import AddToCartConfirmModal from "@/components/AddToCartConfirmModal";
+import AddToCartConfirmModal from "./AddToCartConfirmModal";
 
 interface ProductModalProps {
   isOpen: boolean;

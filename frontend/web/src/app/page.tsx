@@ -1,9 +1,15 @@
 "use client";
 
-import React, { useRef, useState, useMemo, useCallback } from "react";
+import React, {
+  useRef,
+  useState,
+  useMemo,
+  useCallback,
+  useEffect,
+} from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import ProductCard from "@/components/ProductCard";
+import ProductCard from "@/components/product/ProductCard";
 
 interface Product {
   id: string;
@@ -106,6 +112,10 @@ export default function HomePage() {
   const [carouselScroll, setCarouselScroll] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
   const carouselRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    window.dispatchEvent(new Event("dataLoadComplete"));
+  }, []);
 
   // Detect mobile/tablet screen size
   React.useEffect(() => {

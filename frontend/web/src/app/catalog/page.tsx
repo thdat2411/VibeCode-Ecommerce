@@ -1,5 +1,5 @@
 import { getProducts, getCollections } from "@/lib/api/catalog";
-import { CatalogWrapper } from "@/components/CatalogWrapper";
+import { CatalogWrapper } from "@/components/catalog/CatalogWrapper";
 
 // Disable static generation since we're fetching from API
 export const dynamic = "force-dynamic";

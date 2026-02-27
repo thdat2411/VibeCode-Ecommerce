@@ -11,8 +11,8 @@ import {
   deleteAddress,
   setDefaultAddress,
 } from "@/lib/api/addresses";
-import AddressModal from "@/components/AddressModal";
-import Toast from "@/components/Toast";
+import AddressModal from "@/components/addresses/AddressModal";
+import Toast from "@/components/shared/Toast";
 
 interface Address {
   id: string;

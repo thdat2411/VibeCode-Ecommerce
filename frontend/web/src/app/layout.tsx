@@ -1,11 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import { Suspense } from "react";
 import "./globals.css";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import Loading from "./loading";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
+import ShellLayout from "@/components/layout/ShellLayout";
+import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import { AuthProvider } from "@/lib/auth-context";
 import { CartProvider } from "@/lib/cart-context";
 import { AddressProvider } from "@/lib/address-context";
@@ -31,11 +28,7 @@ export default function RootLayout({
             <CartProvider>
               <AddressProvider>
                 <NotificationProvider>
-                  <Header />
-                  <div className="min-h-screen">
-                    <Suspense fallback={<Loading />}>{children}</Suspense>
-                    <Footer />
-                  </div>
+                  <ShellLayout>{children}</ShellLayout>
                 </NotificationProvider>
               </AddressProvider>
             </CartProvider>
