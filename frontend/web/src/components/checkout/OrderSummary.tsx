@@ -88,7 +88,9 @@ export function OrderSummary({ items, total }: OrderSummaryProps) {
         <div className="space-y-3 text-sm">
           <div className="flex justify-between">
             <span className="text-black">Tổng phụ</span>
-            <span className="font-medium">{total.toLocaleString("vi-VN")}₫</span>
+            <span className="font-medium">
+              {total.toLocaleString("vi-VN")}₫
+            </span>
           </div>
           <div className="flex justify-between">
             <span className="text-black">Vận chuyển</span>

@@ -319,22 +319,45 @@ app.MapPost("/api/cart/merge", async (HttpContext context, IHttpClientFactory cl
 .WithName("MergeCart")
 .WithOpenApi();
 
-app.MapGet("/api/orders", async (IHttpClientFactory clientFactory) =>
+app.MapGet("/api/orders", async (HttpRequest request, IHttpClientFactory clientFactory) =>
 {
     var client = clientFactory.CreateClient("OrdersService");
-    var response = await client.GetAsync("/api/orders");
-    return Results.Ok(await response.Content.ReadAsStringAsync());
+    var userId = request.Headers["X-User-Id"].ToString();
+    var req = new HttpRequestMessage(HttpMethod.Get, "/api/orders");
+    req.Headers.TryAddWithoutValidation("X-User-Id", userId);
+    var response = await client.SendAsync(req);
+    var json = await response.Content.ReadAsStringAsync();
+    return Results.Content(json, "application/json", statusCode: (int)response.StatusCode);
 })
 .WithName("GetOrders")
 .WithOpenApi();
 
-app.MapPost("/api/orders", async (IHttpClientFactory clientFactory) =>
+app.MapPost("/api/orders", async (HttpRequest request, IHttpClientFactory clientFactory) =>
 {
     var client = clientFactory.CreateClient("OrdersService");
-    var response = await client.PostAsync("/api/orders", null);
-    return Results.Ok(await response.Content.ReadAsStringAsync());
+    var userId = request.Headers["X-User-Id"].ToString();
+    var body = await ReadBodyAsync(request);
+    var req = new HttpRequestMessage(HttpMethod.Post, "/api/orders");
+    req.Headers.TryAddWithoutValidation("X-User-Id", userId);
+    req.Content = new StringContent(body, System.Text.Encoding.UTF8, "application/json");
+    var response = await client.SendAsync(req);
+    var json = await response.Content.ReadAsStringAsync();
+    return Results.Content(json, "application/json", statusCode: (int)response.StatusCode);
 })
 .WithName("CreateOrder")
+.WithOpenApi();
+
+app.MapPatch("/api/orders/{id}/status", async (string id, HttpRequest request, IHttpClientFactory clientFactory) =>
+{
+    var client = clientFactory.CreateClient("OrdersService");
+    var body = await ReadBodyAsync(request);
+    var req = new HttpRequestMessage(HttpMethod.Patch, $"/api/orders/{id}/status");
+    req.Content = new StringContent(body, System.Text.Encoding.UTF8, "application/json");
+    var response = await client.SendAsync(req);
+    var json = await response.Content.ReadAsStringAsync();
+    return Results.Content(json, "application/json", statusCode: (int)response.StatusCode);
+})
+.WithName("UpdateOrderStatus")
 .WithOpenApi();
 
 app.MapGet("/api/users/me", async (IHttpClientFactory clientFactory) =>
@@ -353,6 +376,18 @@ app.MapPost("/api/payments/checkout", async (IHttpClientFactory clientFactory) =
     return Results.Ok(await response.Content.ReadAsStringAsync());
 })
 .WithName("CreateCheckoutSession")
+.WithOpenApi();
+
+app.MapPost("/api/payments/momo/create", async (HttpRequest request, IHttpClientFactory clientFactory) =>
+{
+    var client = clientFactory.CreateClient("PaymentsService");
+    var body = await ReadBodyAsync(request);
+    var content = new StringContent(body, System.Text.Encoding.UTF8, new System.Net.Http.Headers.MediaTypeHeaderValue("application/json"));
+    var response = await client.PostAsync("/api/payments/momo/create", content);
+    var json = await response.Content.ReadAsStringAsync();
+    return Results.Content(json, "application/json", statusCode: (int)response.StatusCode);
+})
+.WithName("CreateMomoPayment")
 .WithOpenApi();
 
 app.MapPost("/api/auth/login", async (HttpRequest request, IHttpClientFactory clientFactory) =>

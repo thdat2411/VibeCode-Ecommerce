@@ -35,7 +35,10 @@ export function MobileMenu({
         >
           the new originals
         </Link>
-        <button onClick={onClose} className="text-white hover:text-gray-200 transition">
+        <button
+          onClick={onClose}
+          className="text-white hover:text-gray-200 transition"
+        >
           <X size={24} />
         </button>
       </div>
@@ -80,7 +83,9 @@ export function MobileMenu({
               {hasSubs && (
                 <div
                   className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                    isExpanded ? "max-h-[800px] opacity-100" : "max-h-0 opacity-0"
+                    isExpanded
+                      ? "max-h-[800px] opacity-100"
+                      : "max-h-0 opacity-0"
                   }`}
                 >
                   <div className="pl-4 pb-3 space-y-2">

@@ -15,30 +15,13 @@ import {
 import Loading from "@/app/loading";
 import AddressModal from "@/components/addresses/AddressModal";
 import {
+  Order,
   OrderCard,
   OrderHistoryRow,
+  OrderListRow,
+  OrderDetail,
+  Pagination,
 } from "@/components/dashboard/OrderComponents";
-
-interface Order {
-  id: string;
-  userId: string;
-  items: Array<{
-    productId: string;
-    name: string;
-    price: number;
-    quantity: number;
-  }>;
-  total: number;
-  status: string;
-  shippingAddress: {
-    street: string;
-    city: string;
-    state: string;
-    postalCode: string;
-    country: string;
-  };
-  createdAt: string;
-}
 
 interface User {
   id: string;
@@ -126,6 +109,8 @@ export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState<"account" | "orders" | "history">(
     "account",
   );
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [editingAddress, setEditingAddress] = useState<Address | null>(null);
   const [addressForm, setAddressForm] = useState(INITIAL_ADDRESS_FORM);
@@ -213,7 +198,6 @@ export default function DashboardPage() {
 
   if (loading) return <Loading />;
 
-  const activeOrders = orders.filter((o) => o.status !== "delivered");
   const defaultAddress = addresses.find((a) => a.isDefault);
 
   return (
@@ -251,7 +235,11 @@ export default function DashboardPage() {
               />
               <NavButton
                 active={activeTab === "orders"}
-                onClick={() => setActiveTab("orders")}
+                onClick={() => {
+                  setActiveTab("orders");
+                  setSelectedOrder(null);
+                  setCurrentPage(1);
+                }}
                 label="ĐƠN HÀNG"
               />
               <NavButton
@@ -312,27 +300,59 @@ export default function DashboardPage() {
             )}
 
             {/* Orders Tab */}
-            {activeTab === "orders" && (
-              <div>
-                <h2 className="text-xs tracking-widest text-black mb-6 uppercase font-medium">
-                  ĐƠN HÀNG HIỆN TẠI
-                </h2>
+            {activeTab === "orders" &&
+              (() => {
+                const ORDERS_PER_PAGE = 6;
+                const totalPages = Math.ceil(orders.length / ORDERS_PER_PAGE);
+                const pageOrders = orders.slice(
+                  (currentPage - 1) * ORDERS_PER_PAGE,
+                  currentPage * ORDERS_PER_PAGE,
+                );
 
-                {activeOrders.length === 0 ? (
-                  <EmptyState
-                    message="Không có đơn hàng nào đang xử lý"
-                    buttonText="TIẾP TỤC MUA SẮM"
-                    onButtonClick={() => router.push("/catalog")}
-                  />
-                ) : (
-                  <div className="space-y-6">
-                    {activeOrders.map((order) => (
-                      <OrderCard key={order.id} order={order} />
-                    ))}
+                if (selectedOrder) {
+                  return (
+                    <OrderDetail
+                      order={selectedOrder}
+                      onBack={() => setSelectedOrder(null)}
+                    />
+                  );
+                }
+
+                return (
+                  <div>
+                    <h2 className="text-xs tracking-widest text-black mb-6 uppercase font-medium">
+                      ĐƠN HÀNG
+                    </h2>
+                    {orders.length === 0 ? (
+                      <EmptyState
+                        message="Chưa có đơn hàng nào"
+                        buttonText="BẮT ĐẦU MUA SẮM"
+                        onButtonClick={() => router.push("/catalog")}
+                      />
+                    ) : (
+                      <>
+                        <div className="space-y-2">
+                          {pageOrders.map((order) => (
+                            <OrderListRow
+                              key={order.id}
+                              order={order}
+                              onClick={() => setSelectedOrder(order)}
+                            />
+                          ))}
+                        </div>
+                        <Pagination
+                          currentPage={currentPage}
+                          totalPages={totalPages}
+                          onPage={(p) => {
+                            setCurrentPage(p);
+                            setSelectedOrder(null);
+                          }}
+                        />
+                      </>
+                    )}
                   </div>
-                )}
-              </div>
-            )}
+                );
+              })()}
 
             {/* History Tab */}
             {activeTab === "history" && (
@@ -375,4 +395,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-

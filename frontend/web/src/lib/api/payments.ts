@@ -31,6 +31,12 @@ export interface PaymentResponse {
     orderId: string;
 }
 
+export interface MomoPaymentResponse {
+    payUrl: string;
+    requestId: string;
+    orderId: string;
+}
+
 // Payments API
 export async function processCheckout(checkoutData: CheckoutPayload): Promise<PaymentResponse> {
     try {
@@ -40,16 +46,35 @@ export async function processCheckout(checkoutData: CheckoutPayload): Promise<Pa
             }
         });
         let data = response.data;
-        
+
         // Handle case where response.data is a JSON string instead of object
         if (typeof data === 'string') {
             data = JSON.parse(data);
         }
-        
+
         return data as PaymentResponse;
     } catch (error) {
         if (error instanceof AxiosError) {
             throw new Error(error.response?.data?.message || 'Checkout failed');
+        }
+        throw error;
+    }
+}
+
+export async function createMomoPayment(orderId: string, amount: number): Promise<MomoPaymentResponse> {
+    try {
+        const response = await apiClient.post<MomoPaymentResponse>('/api/payments/momo/create', {
+            orderId,
+            amount,
+        }, {
+            headers: { 'X-User-Id': getUserId() }
+        });
+        let data = response.data;
+        if (typeof data === 'string') data = JSON.parse(data);
+        return data as MomoPaymentResponse;
+    } catch (error) {
+        if (error instanceof AxiosError) {
+            throw new Error(error.response?.data?.error || 'MoMo payment failed');
         }
         throw error;
     }

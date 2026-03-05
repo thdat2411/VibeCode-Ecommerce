@@ -32,6 +32,58 @@ public static class CatalogEndpoints
         group.MapPost("/", CreateProduct)
             .WithName("CreateProduct")
             .WithOpenApi();
+
+        // ── SKU stock endpoints (used by orders service) ──────────────────────
+
+        // GET /api/catalog/skus/{skuId}  — fetch single SKU with stock
+        app.MapGet("/api/catalog/skus/{skuId}", async (string skuId, CatalogDbContext db) =>
+        {
+            var sku = await db.ProductSkus.AsNoTracking().FirstOrDefaultAsync(s => s.Id == skuId);
+            return sku is not null
+                ? Results.Ok(new { id = sku.Id, stock = sku.Stock, priceOverride = sku.PriceOverride })
+                : Results.NotFound(new { error = $"SKU {skuId} not found" });
+        })
+        .WithName("GetSkuById")
+        .WithOpenApi();
+
+        // POST /api/catalog/reserve-stock  — decrement SKU stock atomically
+        app.MapPost("/api/catalog/reserve-stock", async (StockRequest req, CatalogDbContext db) =>
+        {
+            var sku = await db.ProductSkus.FirstOrDefaultAsync(s => s.Id == req.SkuId);
+            if (sku is null) return Results.NotFound(new { error = $"SKU {req.SkuId} not found" });
+            if (sku.Stock < req.Quantity)
+                return Results.BadRequest(new { error = $"Insufficient stock: available {sku.Stock}, requested {req.Quantity}" });
+
+            // Use raw SQL to avoid init-only property limitation and ensure atomicity
+            await db.Database.ExecuteSqlRawAsync(
+                "UPDATE product_skus SET stock = stock - {0} WHERE id = {1} AND stock >= {0}",
+                req.Quantity, req.SkuId);
+
+            // Also update denormalized total_stock on the product
+            await db.Database.ExecuteSqlRawAsync(
+                "UPDATE products SET total_stock = total_stock - {0} WHERE id = (SELECT product_id FROM product_skus WHERE id = {1})",
+                req.Quantity, req.SkuId);
+
+            return Results.Ok(new { reserved = req.Quantity });
+        })
+        .WithName("ReserveStock")
+        .WithOpenApi();
+
+        // POST /api/catalog/release-stock  — compensating action: restore stock on failure
+        app.MapPost("/api/catalog/release-stock", async (StockRequest req, CatalogDbContext db) =>
+        {
+            await db.Database.ExecuteSqlRawAsync(
+                "UPDATE product_skus SET stock = stock + {0} WHERE id = {1}",
+                req.Quantity, req.SkuId);
+
+            await db.Database.ExecuteSqlRawAsync(
+                "UPDATE products SET total_stock = total_stock + {0} WHERE id = (SELECT product_id FROM product_skus WHERE id = {1})",
+                req.Quantity, req.SkuId);
+
+            return Results.Ok(new { released = req.Quantity });
+        })
+        .WithName("ReleaseStock")
+        .WithOpenApi();
     }
 
     private static async Task<IResult> GetAllProducts(CatalogDbContext db)
@@ -160,3 +212,6 @@ public static class CatalogEndpoints
         };
     }
 }
+
+/// <summary>Payload for reserve-stock and release-stock endpoints.</summary>
+public record StockRequest(string SkuId, int Quantity);

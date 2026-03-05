@@ -34,7 +34,7 @@ export function BillingAddressSection({
       </label>
 
       <label
-        className={`flex items-center gap-3 border-x border-b px-4 py-3.5 cursor-pointer transition-colors ${
+        className={`flex items-center gap-3 border-x border-y px-4 py-3.5 cursor-pointer transition-colors ${
           billingType === "different"
             ? "border-black bg-gray-50 rounded-b-none"
             : "border-gray-300 rounded-b-lg"
@@ -60,7 +60,11 @@ export function BillingAddressSection({
         }}
       >
         <div className="border-x border-b border-gray-300 rounded-b-lg px-4 pt-5 pb-5 space-y-3 bg-gray-100">
-          <AddressForm values={billing} onChange={onBillingChange} required={false} />
+          <AddressForm
+            values={billing}
+            onChange={onBillingChange}
+            required={false}
+          />
         </div>
       </div>
     </div>

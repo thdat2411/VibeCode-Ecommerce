@@ -15,11 +15,7 @@ export default function ShellLayout({ children }: { children: ReactNode }) {
   const isBare = BARE_ROUTES.some((r) => pathname.startsWith(r));
 
   if (isBare) {
-    return (
-      <Suspense fallback={<Loading />}>
-        {children}
-      </Suspense>
-    );
+    return <Suspense fallback={<Loading />}>{children}</Suspense>;
   }
 
   return (

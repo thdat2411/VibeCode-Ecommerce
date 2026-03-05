@@ -4,14 +4,16 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createOrder } from "@/lib/api/orders";
-import { processCheckout } from "@/lib/api/payments";
+import { processCheckout, createMomoPayment } from "@/lib/api/payments";
 import { useCart } from "@/lib/cart-context";
 import { useAuth } from "@/lib/auth-context";
+import { useAddresses } from "@/lib/address-context";
 import { SHIPPING_FEE } from "@/components/checkout/checkoutConstants";
 import { ContactSection } from "@/components/checkout/ContactSection";
 import { ShippingAddressSection } from "@/components/checkout/ShippingAddressSection";
 import { ShippingMethodSection } from "@/components/checkout/ShippingMethodSection";
 import { PaymentSection } from "@/components/checkout/PaymentSection";
+import type { PaymentMethod } from "@/components/checkout/PaymentSection";
 import { BillingAddressSection } from "@/components/checkout/BillingAddressSection";
 import { OrderSummary } from "@/components/checkout/OrderSummary";
 import type { AddressFormValues } from "@/components/checkout/AddressForm";
@@ -20,9 +22,10 @@ export default function CheckoutPage() {
   const router = useRouter();
   const { items, total, loading, clearCart } = useCart();
   const { authenticated, user } = useAuth();
+  const { defaultAddress } = useAddresses();
   const [processing, setProcessing] = useState(false);
   const [billingType, setBillingType] = useState<"same" | "different">("same");
-  const [paymentMethod, setPaymentMethod] = useState<"bank" | "cod">("cod");
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cod");
   const [saveInfo, setSaveInfo] = useState(false);
   const [newsletter, setNewsletter] = useState(false);
   const [newsletterSms, setNewsletterSms] = useState(false);
@@ -52,6 +55,22 @@ export default function CheckoutPage() {
   useEffect(() => {
     if (user?.email) setForm((f) => ({ ...f, email: user.email }));
   }, [user]);
+
+  // Pre-fill shipping address from the user's default saved address
+  useEffect(() => {
+    if (!defaultAddress) return;
+    setForm((f) => ({
+      ...f,
+      firstName: defaultAddress.firstName,
+      lastName: defaultAddress.lastName,
+      address: defaultAddress.street,
+      ward: defaultAddress.ward ?? "",
+      district: defaultAddress.district,
+      province: defaultAddress.city,
+      postalCode: defaultAddress.postalCode,
+      phone: defaultAddress.phone,
+    }));
+  }, [defaultAddress]);
   useEffect(() => {
     window.dispatchEvent(new Event("dataLoadComplete"));
   }, []);
@@ -74,7 +93,7 @@ export default function CheckoutPage() {
         postalCode: form.postalCode || "000000",
         country: "VN",
       };
-      await createOrder({
+      const order = await createOrder({
         items: items.map((item) => ({
           productId: item.productId,
           name: item.name,
@@ -85,6 +104,17 @@ export default function CheckoutPage() {
         status: "pending",
         shippingAddress,
       });
+
+      if (paymentMethod === "momo") {
+        const momoRes = await createMomoPayment(
+          order?.id ?? `order-${Date.now()}`,
+          total + SHIPPING_FEE,
+        );
+        clearCart();
+        window.location.href = momoRes.payUrl;
+        return;
+      }
+
       const paymentResponse = await processCheckout({
         items: items.map((item) => ({
           productId: item.productId,

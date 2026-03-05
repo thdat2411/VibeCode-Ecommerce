@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { ChevronDown } from "lucide-react";
+import { PROVINCES } from "@/components/checkout/checkoutConstants";
 
 interface Address {
   id: string;
@@ -268,21 +270,32 @@ export default function AddressModal({
             <label className="block text-xs text-gray-600 tracking-wider mb-2 uppercase">
               TỈNH (THÀNH) *
             </label>
-            <input
-              type="text"
-              value={addressForm.city}
-              onChange={(e) => {
-                clearErrors();
-                setAddressForm({
-                  ...addressForm,
-                  city: e.target.value,
-                });
-              }}
-              className={`w-full border px-4 py-3 text-sm !text-black placeholder-gray-500 focus:outline-none ${getErrorClass(
-                "Tỉnh (Thành)",
-              )}`}
-              placeholder="Thành phố / Tỉnh"
-            />
+            <div className="relative">
+              <select
+                value={addressForm.city}
+                onChange={(e) => {
+                  clearErrors();
+                  setAddressForm({
+                    ...addressForm,
+                    city: e.target.value,
+                  });
+                }}
+                className={`w-full border px-4 py-3 text-sm !text-black focus:outline-none bg-white appearance-none ${getErrorClass(
+                  "Tỉnh (Thành)",
+                )}`}
+              >
+                <option value="">Chọn tỉnh / thành phố</option>
+                {PROVINCES.map((p) => (
+                  <option key={p} value={p}>
+                    {p}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown
+                size={14}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+              />
+            </div>
           </div>
 
           {/* Country Dropdown */}

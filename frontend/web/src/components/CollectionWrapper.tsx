@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from "react";
 import { Product, Collection } from "@/lib/api/catalog";
 import { CollectionGrid } from "./CollectionGrid";
 import { CollectionPagination } from "./CollectionPagination";
-import { FilterDrawer } from "@/components/collection/FilterDrawer";
+import { FilterDrawer } from "./collection/FilterDrawer";
 import { SlidersHorizontal } from "lucide-react";
 
 interface CollectionWrapperProps {

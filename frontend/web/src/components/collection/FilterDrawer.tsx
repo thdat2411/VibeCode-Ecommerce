@@ -23,9 +23,7 @@ interface FilterDrawerProps {
   setCollectionSelected: (v: boolean) => void;
   subCollections: Collection[];
   selectedSubSlugs: string[];
-  setSelectedSubSlugs: (
-    v: string[] | ((prev: string[]) => string[]),
-  ) => void;
+  setSelectedSubSlugs: (v: string[] | ((prev: string[]) => string[])) => void;
   categoryName: string;
   products: Product[];
   // Price filter
@@ -40,17 +38,13 @@ interface FilterDrawerProps {
   setColorOpen: (v: boolean | ((prev: boolean) => boolean)) => void;
   colorOptions: { value: string; count: number }[];
   selectedColors: string[];
-  setSelectedColors: (
-    v: string[] | ((prev: string[]) => string[]),
-  ) => void;
+  setSelectedColors: (v: string[] | ((prev: string[]) => string[])) => void;
   // Size filter
   sizeOpen: boolean;
   setSizeOpen: (v: boolean | ((prev: boolean) => boolean)) => void;
   sizeOptions: { value: string; count: number }[];
   selectedSizes: string[];
-  setSelectedSizes: (
-    v: string[] | ((prev: string[]) => string[]),
-  ) => void;
+  setSelectedSizes: (v: string[] | ((prev: string[]) => string[])) => void;
   // Misc
   sortedProductCount: number;
   selectedChips: FilterChip[];
