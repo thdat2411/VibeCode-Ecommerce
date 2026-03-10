@@ -10,8 +10,8 @@ public record CreateOrderRequest
 public record OrderItemRequest
 {
     public string ProductId { get; init; } = string.Empty;
-    /// <summary>SKU id for exact variant (Color+Size). Required for stock check.</summary>
-    public string SkuId { get; init; } = string.Empty;
+    /// <summary>SKU id for exact variant (Color+Size). Optional — stock check and reservation are skipped when absent.</summary>
+    public string? SkuId { get; init; }
     public string Name { get; init; } = string.Empty;
     public decimal Price { get; init; }
     public int Quantity { get; init; }

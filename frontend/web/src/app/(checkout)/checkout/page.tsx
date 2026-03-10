@@ -96,6 +96,7 @@ export default function CheckoutPage() {
       const order = await createOrder({
         items: items.map((item) => ({
           productId: item.productId,
+          skuId: item.skuId,
           name: item.name,
           price: item.price,
           quantity: item.quantity,

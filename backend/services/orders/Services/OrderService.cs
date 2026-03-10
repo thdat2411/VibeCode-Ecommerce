@@ -32,8 +32,6 @@ public class OrderService : IOrderService
         {
             if (string.IsNullOrWhiteSpace(item.ProductId))
                 return new OrderResult.ValidationError("Each item must have a ProductId.");
-            if (string.IsNullOrWhiteSpace(item.SkuId))
-                return new OrderResult.ValidationError($"Item '{item.Name}' is missing SkuId (variant selection).");
             if (item.Quantity <= 0)
                 return new OrderResult.ValidationError($"Item '{item.Name}' must have quantity > 0.");
             if (item.Price <= 0)
@@ -48,7 +46,7 @@ public class OrderService : IOrderService
 
         foreach (var productId in uniqueProductIds)
         {
-            var catalogResponse = await _catalogClient.GetAsync($"/api/catalog/{productId}");
+            var catalogResponse = await _catalogClient.GetAsync($"/api/products/{productId}");
             if (!catalogResponse.IsSuccessStatusCode)
                 return new OrderResult.ValidationError($"Product '{productId}' not found in catalog.");
 
@@ -61,8 +59,10 @@ public class OrderService : IOrderService
             var itemsForProduct = request.Items.Where(i => i.ProductId == productId);
             foreach (var item in itemsForProduct)
             {
-                // Find the SKU to get price override if any
-                var sku = catalogProduct.Skus?.FirstOrDefault(s => s.Id == item.SkuId);
+                // Find the SKU to get price override if any (null SkuId → fall back to base price)
+                var sku = string.IsNullOrWhiteSpace(item.SkuId)
+                    ? null
+                    : catalogProduct.Skus?.FirstOrDefault(s => s.Id == item.SkuId);
                 var expectedPrice = sku?.PriceOverride ?? catalogProduct.Price;
 
                 // Allow 1 VND tolerance for floating point
@@ -74,8 +74,11 @@ public class OrderService : IOrderService
         }
 
         // ── Step 3: Check inventory ──────────────────────────────────────────
-        // Verify each SKU has enough stock before reserving anything
-        foreach (var item in request.Items)
+        // Verify each SKU has enough stock before reserving anything.
+        // Items without a SkuId (no variant selected) skip this step.
+        var itemsWithSku = request.Items.Where(i => !string.IsNullOrWhiteSpace(i.SkuId)).ToList();
+
+        foreach (var item in itemsWithSku)
         {
             var stockResponse = await _catalogClient.GetAsync($"/api/catalog/skus/{item.SkuId}");
             if (!stockResponse.IsSuccessStatusCode)
@@ -87,15 +90,16 @@ public class OrderService : IOrderService
                 return new OrderResult.ValidationError($"Failed to read SKU data for '{item.SkuId}'.");
 
             if (sku.Stock < item.Quantity)
-                return new OrderResult.InsufficientStock(item.ProductId, item.SkuId, sku.Stock, item.Quantity);
+                return new OrderResult.InsufficientStock(item.ProductId, item.SkuId!, sku.Stock, item.Quantity);
         }
 
         // ── Step 4: Reserve stock ────────────────────────────────────────────
         // Atomically decrement stock in catalog for each SKU.
         // If any reservation fails, we return early — previously reserved items
         // will be rolled back via compensating calls.
+        // Items without a SkuId are skipped.
         var reserved = new List<(string SkuId, int Quantity)>();
-        foreach (var item in request.Items)
+        foreach (var item in itemsWithSku)
         {
             var reservePayload = JsonSerializer.Serialize(new { skuId = item.SkuId, quantity = item.Quantity });
             var reserveContent = new StringContent(reservePayload, System.Text.Encoding.UTF8, "application/json");
@@ -112,10 +116,10 @@ public class OrderService : IOrderService
                 }
 
                 var reason = await reserveResponse.Content.ReadAsStringAsync();
-                return new OrderResult.ReservationFailed(item.ProductId, item.SkuId, reason);
+                return new OrderResult.ReservationFailed(item.ProductId, item.SkuId!, reason);
             }
 
-            reserved.Add((item.SkuId, item.Quantity));
+            reserved.Add((item.SkuId!, item.Quantity));
         }
 
         // ── Step 5: Persist order ────────────────────────────────────────────

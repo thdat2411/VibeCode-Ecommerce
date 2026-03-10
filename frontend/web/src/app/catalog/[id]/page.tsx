@@ -200,6 +200,7 @@ export default function ProductPage({
                   price: product.price,
                   totalStock: product.totalStock ?? 0,
                   images: selectedColorImages,
+                  skus: product.skus ?? [],
                 }}
                 sizes={sizes}
                 colors={colors}

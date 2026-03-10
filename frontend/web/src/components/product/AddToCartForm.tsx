@@ -1,9 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { addToCart } from "@/lib/api/cart";
 import { isAuthenticated } from "@/lib/api/auth";
+
+export interface ProductSku {
+  id: string;
+  variantValues: Record<string, string>;
+  stock: number;
+  priceOverride: number | null;
+}
 
 export interface Product {
   id: string;
@@ -11,6 +18,7 @@ export interface Product {
   price: number;
   totalStock: number;
   images: string[];
+  skus?: ProductSku[];
 }
 
 interface AddToCartFormProps {
@@ -26,6 +34,18 @@ export function AddToCartForm({ product, sizes, colors }: AddToCartFormProps) {
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+
+  // Resolve the matching SKU from the selected size + color
+  const selectedSkuId = useMemo(() => {
+    if (!product.skus || product.skus.length === 0) return undefined;
+    const match = product.skus.find((sku) => {
+      const vals = sku.variantValues;
+      const sizeMatch = !selectedSize || vals["Size"] === selectedSize;
+      const colorMatch = !selectedColor || vals["Color"] === selectedColor;
+      return sizeMatch && colorMatch;
+    });
+    return match?.id;
+  }, [product.skus, selectedSize, selectedColor]);
 
   async function handleAddToCart(e: React.FormEvent) {
     e.preventDefault();
@@ -45,10 +65,13 @@ export function AddToCartForm({ product, sizes, colors }: AddToCartFormProps) {
     try {
       await addToCart({
         productId: product.id,
+        skuId: selectedSkuId,
         name: `${product.name}${selectedSize ? ` - ${selectedSize}` : ""}${selectedColor ? ` (${selectedColor})` : ""}`,
         price: product.price,
         image: product.images[0],
         quantity,
+        size: selectedSize || undefined,
+        color: selectedColor || undefined,
       });
 
       setSuccess(true);

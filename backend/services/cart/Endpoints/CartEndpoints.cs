@@ -138,6 +138,7 @@ public static class CartEndpoints
     private static CartItem MapItem(AddToCartRequest r) => new()
     {
         ProductId = r.ProductId,
+        SkuId = r.SkuId,
         Name = r.Name,
         Price = r.Price,
         Quantity = r.Quantity,

@@ -16,6 +16,9 @@ public record CartItem
     [JsonPropertyName("productId")]
     public string ProductId { get; set; } = string.Empty;
 
+    [JsonPropertyName("skuId")]
+    public string? SkuId { get; set; }
+
     [JsonPropertyName("name")]
     public string Name { get; set; } = string.Empty;
 
@@ -38,6 +41,7 @@ public record CartItem
 public record AddToCartRequest
 {
     public string ProductId { get; init; } = string.Empty;
+    public string? SkuId { get; init; }
     public string Name { get; init; } = string.Empty;
     public decimal Price { get; init; }
     public int Quantity { get; init; } = 1;

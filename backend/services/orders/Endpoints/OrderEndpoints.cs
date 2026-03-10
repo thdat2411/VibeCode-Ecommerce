@@ -51,12 +51,12 @@ public static class OrderEndpoints
 
             return result switch
             {
-                OrderResult.Success s               => Results.Created($"/api/orders/{s.Order.Id}", s.Order),
-                OrderResult.ValidationError e       => Results.BadRequest(new { error = e.Message }),
-                OrderResult.PriceMismatch p         => Results.BadRequest(new { error = $"Price mismatch for product {p.ProductId}: expected {p.Expected}, got {p.Actual}" }),
-                OrderResult.InsufficientStock i     => Results.BadRequest(new { error = $"Insufficient stock for SKU {i.SkuId}: available {i.Available}, requested {i.Requested}" }),
-                OrderResult.ReservationFailed r     => Results.BadRequest(new { error = $"Stock reservation failed for SKU {r.SkuId}: {r.Reason}" }),
-                _                                   => Results.StatusCode(500)
+                OrderResult.Success s => Results.Created($"/api/orders/{s.Order.Id}", s.Order),
+                OrderResult.ValidationError e => Results.BadRequest(new { error = e.Message }),
+                OrderResult.PriceMismatch p => Results.BadRequest(new { error = $"Price mismatch for product {p.ProductId}: expected {p.Expected}, got {p.Actual}" }),
+                OrderResult.InsufficientStock i => Results.BadRequest(new { error = $"Insufficient stock for SKU {i.SkuId}: available {i.Available}, requested {i.Requested}" }),
+                OrderResult.ReservationFailed r => Results.BadRequest(new { error = $"Stock reservation failed for SKU {r.SkuId}: {r.Reason}" }),
+                _ => Results.StatusCode(500)
             };
         })
         .WithName("CreateOrder")

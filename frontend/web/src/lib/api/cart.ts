@@ -2,6 +2,7 @@ import { apiClient, handleApiError } from './client';
 
 export interface CartItem {
     productId: string;
+    skuId?: string;
     name: string;
     price: number;
     quantity: number;
